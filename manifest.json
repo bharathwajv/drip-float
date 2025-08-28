@@ -9,43 +9,18 @@
   },
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "activeTab"
   ],
   "host_permissions": [
-    "https://www.myntra.com/*",
-    "https://www.ajio.com/*",
-    "https://www.flipkart.com/*",
-    "https://www.amazon.in/*",
-    "https://www.snapdeal.com/*",
-    "https://www.nykaa.com/*",
-    "https://www.purplle.com/*",
-    "https://www.limeroad.com/*",
-    "https://www.voonik.com/*",
-    "https://www.koovs.com/*",
-    "https://www.tatacliq.com/*",
-    "https://www.reliancedigital.in/*",
-    "https://www.croma.com/*",
-    "https://www.shopclues.com/*",
-    "https://www.paytmmall.com/*"
+    "https://*/*",
+    "http://*/*"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://www.myntra.com/*",
-        "https://www.ajio.com/*",
-        "https://www.flipkart.com/*",
-        "https://www.amazon.in/*",
-        "https://www.snapdeal.com/*",
-        "https://www.nykaa.com/*",
-        "https://www.purplle.com/*",
-        "https://www.limeroad.com/*",
-        "https://www.voonik.com/*",
-        "https://www.koovs.com/*",
-        "https://www.tatacliq.com/*",
-        "https://www.reliancedigital.in/*",
-        "https://www.croma.com/*",
-        "https://www.shopclues.com/*",
-        "https://www.paytmmall.com/*"
+        "https://*/*",
+        "http://*/*"
       ],
       "js": [
         "content/panel.js"
@@ -74,21 +49,8 @@
         "config/sites.json"
       ],
       "matches": [
-        "https://www.myntra.com/*",
-        "https://www.ajio.com/*",
-        "https://www.flipkart.com/*",
-        "https://www.amazon.in/*",
-        "https://www.snapdeal.com/*",
-        "https://www.nykaa.com/*",
-        "https://www.purplle.com/*",
-        "https://www.limeroad.com/*",
-        "https://www.voonik.com/*",
-        "https://www.koovs.com/*",
-        "https://www.tatacliq.com/*",
-        "https://www.reliancedigital.in/*",
-        "https://www.croma.com/*",
-        "https://www.shopclues.com/*",
-        "https://www.paytmmall.com/*"
+        "https://*/*",
+        "http://*/*"
       ]
     }
   ]

@@ -127,6 +127,71 @@
     chrome.tabs.create({ url: chrome.runtime.getURL('pages/dashboard.html') });
   };
 
+  // Add current site to supported sites
+  const addCurrentSite = async () => {
+    try {
+      // Get current active tab
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      
+      if (!tab) {
+        showStatus('Could not get current tab information', 'error');
+        return;
+      }
+      
+      const currentUrl = tab.url;
+      const hostname = new URL(currentUrl).hostname.replace('www.', '');
+      const siteName = hostname.charAt(0).toUpperCase() + hostname.slice(1);
+      const siteIcon = hostname.charAt(0).toUpperCase();
+      
+      // Check if site is already in the list
+      chrome.storage.local.get(['userSites'], (result) => {
+        const userSites = result.userSites || [];
+        
+        // Check if site already exists (either in user sites or default sites)
+        const defaultSites = [
+          'https://www.myntra.com',
+          'https://www.ajio.com', 
+          'https://www.flipkart.com',
+          'https://www.amazon.in',
+          'https://www.nykaa.com'
+        ];
+        
+        if (userSites.some(site => site.url === currentUrl) || 
+            defaultSites.includes(currentUrl)) {
+          showStatus('This site is already in your supported sites list', 'info');
+          return;
+        }
+        
+        // Add the new site
+        const newSite = {
+          url: currentUrl,
+          name: siteName,
+          icon: siteIcon
+        };
+        
+        userSites.push(newSite);
+        
+        chrome.storage.local.set({ userSites }, () => {
+          showStatus(`${siteName} added to supported sites!`, 'success');
+          
+          // Update the button text temporarily
+          const originalText = addCurrentSiteBtn.innerHTML;
+          addCurrentSiteBtn.innerHTML = '✅ Added!';
+          addCurrentSiteBtn.disabled = true;
+          
+          setTimeout(() => {
+            addCurrentSiteBtn.innerHTML = originalText;
+            addCurrentSiteBtn.disabled = false;
+          }, 2000);
+        });
+      });
+      
+    } catch (error) {
+      console.error('Error adding current site:', error);
+      showStatus('Failed to add current site', 'error');
+    }
+  };
+
   // Show help
   const showHelp = () => {
     showStatus('Help documentation coming soon!', 'info');

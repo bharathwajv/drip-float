@@ -157,10 +157,25 @@
   const extractAndDisplayImages = async () => {
     if (!imageExtractor) return;
 
+    // Set a timeout to fallback to og:image if extraction takes too long
+    const extractionTimeout = setTimeout(() => {
+      console.log('Image extraction timed out, using fallback...');
+      const ogImage = getOGImageFromPage();
+      if (ogImage) {
+        currentImages = [ogImage];
+        displayCurrentImage();
+        showImageSuccess('Using page preview image (timeout fallback)');
+      } else {
+        showImageError('Image extraction timed out');
+      }
+    }, 3000); // 3 second timeout
+
     try {
       showImageLoading();
       
       const result = await imageExtractor.extractPageImages();
+      clearTimeout(extractionTimeout); // Clear timeout if successful
+      
       currentImages = result.allImages || [];
       
       if (currentImages.length > 0) {
@@ -178,6 +193,7 @@
         }
       }
     } catch (error) {
+      clearTimeout(extractionTimeout);
       console.error('Error extracting images:', error);
       
       // Fallback: try to get og:image from the page
@@ -400,11 +416,59 @@
   });
   
   // Check options to decide if the overlay should be shown by default
-  chrome.runtime.sendMessage({ type: 'GET_OVERLAY_STATE' }, (res) => {
+  chrome.runtime.sendMessage({ type: 'GET_OVERLAY_STATE' }, async (res) => {
     if (res?.ok) {
-      toggleOverlay(res.visible);
+      // Check if current site is supported before showing overlay
+      const isSiteSupported = await checkIfSiteSupported();
+      if (isSiteSupported) {
+        toggleOverlay(res.visible);
+      } else {
+        console.log('Current site is not supported, overlay will not be shown');
+      }
     }
   });
+
+  // Check if current site is supported
+  const checkIfSiteSupported = async () => {
+    try {
+      const currentUrl = window.location.href;
+      const hostname = window.location.hostname;
+      
+      // Default supported sites
+      const defaultSites = [
+        'myntra.com',
+        'ajio.com',
+        'flipkart.com',
+        'amazon.in',
+        'nykaa.com'
+      ];
+      
+      // Check if current hostname is in default sites
+      if (defaultSites.some(site => hostname.includes(site))) {
+        return true;
+      }
+      
+      // Check user-added sites
+      return new Promise((resolve) => {
+        chrome.storage.local.get(['userSites'], (result) => {
+          const userSites = result.userSites || [];
+          const isSupported = userSites.some(site => {
+            try {
+              const siteHostname = new URL(site.url).hostname;
+              return hostname === siteHostname || hostname.includes(siteHostname);
+            } catch (e) {
+              return false;
+            }
+          });
+          resolve(isSupported);
+        });
+      });
+      
+    } catch (error) {
+      console.error('Error checking site support:', error);
+      return false;
+    }
+  };
 
   // Initialize image extractor when page is ready
   if (document.readyState === 'loading') {

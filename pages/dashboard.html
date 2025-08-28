@@ -1,3 +1,174 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>DripYou Dashboard</title>
+    <style>
+      body { 
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        margin: 0;
+        padding: 0;
+        background: #f8f9fa;
+        color: #333;
+      }
+      
+      .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+      }
+      
+      /* Sidebar Styles */
+      .sidebar {
+        width: 280px;
+        background: white;
+        border-right: 1px solid #e9ecef;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+      }
+      
+      .sidebar-header {
+        padding: 24px;
+        border-bottom: 1px solid #e9ecef;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+      
+      .sidebar-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      
+      .sidebar-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+      
+      .nav-menu {
+        padding: 16px 0;
+      }
+      
+      .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 24px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+      }
+      
+      .nav-item:hover {
+        background: #f8f9fa;
+        color: #667eea;
+        border-left-color: #667eea;
+      }
+      
+      .nav-item.active {
+        background: #f0f2ff;
+        color: #667eea;
+        border-left-color: #667eea;
+      }
+      
+      .nav-item::before {
+        margin-right: 12px;
+        font-size: 18px;
+      }
+      
+      .nav-item.dashboard::before { content: '🏠'; }
+      .nav-item.settings::before { content: '⚙️'; }
+      .nav-item.history::before { content: '📋'; }
+      .nav-item.profile::before { content: '👤'; }
+      
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        margin-left: 280px;
+        padding: 32px;
+      }
+      
+      .content-section {
+        display: none;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      
+      .content-section.active {
+        display: block;
+      }
+      
+      .section-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 24px;
+        border-bottom: 2px solid #e9ecef;
+      }
+      
+      .section-header h2 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      
+      .section-header p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 16px;
+      }
+      
+      /* Dashboard Overview */
+      .dashboard-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        margin-bottom: 40px;
+      }
+      
+      .overview-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        text-align: center;
+      }
+      
+      .overview-card::before {
+        font-size: 48px;
+        display: block;
+        margin-bottom: 16px;
+        opacity: 0.7;
+      }
+      
+      .overview-card.images::before { content: '🖼️'; }
+      .overview-card.generated::before { content: '✨'; }
+      .overview-card.saved::before { content: '💾'; }
+      .overview-card.tokens::before { content: '🎫'; }
+      
+      .overview-card h3 {
+        margin: 0 0 8px 0;
+        color: #495057;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      
+      .overview-card .number {
+        font-size: 32px;
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 8px;
+      }
+      
+      .overview-card .description {
+        color: #6c757d;
+        font-size: 14px;
+      }
+      
       /* Settings Styles */
       .option-card {
         background: white;
@@ -198,3 +369,600 @@
       .add-site-form button:hover {
         background: #0056b3;
       }
+      
+      /* Login Form */
+      .login-form {
+        max-width: 400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+      }
+      
+      .input-group {
+        margin-bottom: 20px;
+      }
+      
+      .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+      }
+      
+      .input-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+      }
+      
+      .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      
+      .btn {
+        width: 100%;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        margin-bottom: 16px;
+      }
+      
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+      
+      .btn-primary:hover {
+        background: #5a6fd8;
+        transform: translateY(-1px);
+      }
+      
+      /* History Grid */
+      .history-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+      }
+      
+      .history-item {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .history-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      }
+      
+      .history-item::before {
+        content: '🖼️';
+        font-size: 48px;
+        opacity: 0.1;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+      }
+      
+      .item-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 8px;
+      }
+      
+      .item-meta {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 12px;
+      }
+      
+      .item-preview {
+        width: 100%;
+        height: 120px;
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 12px;
+      }
+      
+      /* User Profile */
+      .profile-section {
+        text-align: center;
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        margin-bottom: 24px;
+      }
+      
+      .user-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #667eea;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 32px;
+        font-weight: 600;
+        margin: 0 auto 20px;
+      }
+      
+      .user-name {
+        font-size: 24px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+      }
+      
+      .user-email {
+        font-size: 16px;
+        color: #6c757d;
+        margin-bottom: 20px;
+      }
+      
+      .token-usage {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+        margin-bottom: 20px;
+      }
+      
+      .token-bar {
+        width: 100%;
+        height: 12px;
+        background: #e9ecef;
+        border-radius: 6px;
+        overflow: hidden;
+        margin: 12px 0;
+      }
+      
+      .token-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745, #20c997);
+        border-radius: 6px;
+        transition: width 0.3s ease;
+      }
+      
+      .token-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        color: #6c757d;
+      }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+          z-index: 1000;
+        }
+        
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 0;
+        }
+        
+        .mobile-menu-toggle {
+          display: block;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1001;
+          background: #667eea;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 12px;
+          font-size: 18px;
+          cursor: pointer;
+        }
+      }
+      
+      .mobile-menu-toggle {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+    
+    <div class="dashboard-container">
+      <!-- Sidebar -->
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h1>DripYou</h1>
+          <p>AI Fashion Collaboration</p>
+        </div>
+        
+        <div class="nav-menu">
+          <div class="nav-item active" data-section="dashboard">
+            Dashboard
+          </div>
+          <div class="nav-item" data-section="profile">
+            Profile
+          </div>
+          <div class="nav-item" data-section="history">
+            History
+          </div>
+          <div class="nav-item" data-section="settings">
+            Settings
+          </div>
+        </div>
+      </div>
+      
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Dashboard Section -->
+        <div class="content-section active" id="dashboard">
+          <div class="section-header">
+            <h2>Dashboard</h2>
+            <p>Welcome back! Here's your overview</p>
+          </div>
+          
+          <div class="dashboard-overview">
+            <div class="overview-card images">
+              <h3>Images Extracted</h3>
+              <div class="number">24</div>
+              <div class="description">This month</div>
+            </div>
+            
+            <div class="overview-card generated">
+              <h3>AI Generated</h3>
+              <div class="number">12</div>
+              <div class="description">This month</div>
+            </div>
+            
+            <div class="overview-card saved">
+              <h3>Saved Items</h3>
+              <div class="number">8</div>
+              <div class="description">In your collection</div>
+            </div>
+            
+            <div class="overview-card tokens">
+              <h3>Tokens Left</h3>
+              <div class="number">156</div>
+              <div class="description">Available for use</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Profile Section -->
+        <div class="content-section" id="profile">
+          <div class="section-header">
+            <h2>Profile</h2>
+            <p>Manage your account and preferences</p>
+          </div>
+          
+          <div class="profile-section">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-name" id="userName">User Name</div>
+            <div class="user-email" id="userEmail">user@example.com</div>
+            
+            <div class="token-usage">
+              <h4 style="margin: 0 0 16px 0; font-size: 18px; color: #495057;">Token Usage</h4>
+              <div class="token-bar">
+                <div class="token-fill" id="tokenFill" style="width: 65%;"></div>
+              </div>
+              <div class="token-text">
+                <span>Used: 65/100</span>
+                <span>35 remaining</span>
+              </div>
+            </div>
+            
+            <button class="btn btn-primary" id="logoutBtn">Sign Out</button>
+          </div>
+          
+          <!-- Login Form (shown when not logged in) -->
+          <div class="login-form" id="loginForm" style="display: none;">
+            <h3 style="text-align: center; margin-bottom: 24px; color: #495057;">Sign In</h3>
+            <form>
+              <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+              </div>
+              <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+          </div>
+        </div>
+        
+        <!-- History Section -->
+        <div class="content-section" id="history">
+          <div class="section-header">
+            <h2>History</h2>
+            <p>Your generated fashion images and collaborations</p>
+          </div>
+          
+          <div class="history-grid">
+            <div class="history-item">
+              <div class="item-title">Summer Collection Look</div>
+              <div class="item-meta">Generated 2 hours ago</div>
+              <div class="item-preview">Image Preview</div>
+            </div>
+            
+            <div class="history-item">
+              <div class="item-title">Casual Weekend Style</div>
+              <div class="item-meta">Generated 1 day ago</div>
+              <div class="item-preview">Image Preview</div>
+            </div>
+            
+            <div class="history-item">
+              <div class="item-title">Business Professional</div>
+              <div class="item-meta">Generated 3 days ago</div>
+              <div class="item-preview">Image Preview</div>
+            </div>
+            
+            <div class="history-item">
+              <div class="item-title">Evening Outfit</div>
+              <div class="item-meta">Generated 1 week ago</div>
+              <div class="item-preview">Image Preview</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Settings Section -->
+        <div class="content-section" id="settings">
+          <div class="section-header">
+            <h2>Settings</h2>
+            <p>Customize your overlay experience and manage supported sites</p>
+          </div>
+          
+          <div class="option-card">
+            <h3>Display Settings</h3>
+            <div class="toggle-container">
+              <div>
+                <div class="toggle-label">Show overlay by default</div>
+                <div class="toggle-description">
+                  When enabled, the floating overlay will appear automatically on supported shopping pages. 
+                  You can always close it manually using the X button.
+                </div>
+              </div>
+              <div id="toggleSwitch" class="toggle-switch"></div>
+            </div>
+          </div>
+          
+          <div class="option-card">
+            <h3>Supported Sites</h3>
+            <div class="toggle-description">
+              The extension works on these shopping sites by default. You can add or remove sites as needed.
+            </div>
+            
+            <div class="sites-section">
+              <div class="sites-list" id="sitesList">
+                <!-- Sites will be populated here -->
+              </div>
+              
+              <div class="add-site-form">
+                <input type="url" id="newSiteUrl" placeholder="Enter site URL (e.g., https://example.com)" />
+                <button id="addSiteBtn">Add Site</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Default supported sites
+      const defaultSites = [
+        { url: 'https://www.myntra.com', name: 'Myntra', icon: 'M' },
+        { url: 'https://www.ajio.com', name: 'AJIO', icon: 'A' },
+        { url: 'https://www.flipkart.com', name: 'Flipkart', icon: 'F' },
+        { url: 'https://www.amazon.in', name: 'Amazon India', icon: 'A' },
+        { url: 'https://www.nykaa.com', name: 'Nykaa', icon: 'N' }
+      ];
+      
+      let userSites = [];
+      
+      // Navigation functionality
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          // Remove active class from all nav items
+          document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+          // Add active class to clicked item
+          item.classList.add('active');
+          
+          // Hide all content sections
+          document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+          // Show selected section
+          const sectionId = item.dataset.section;
+          document.getElementById(sectionId).classList.add('active');
+          
+          // Load sites if settings section is selected
+          if (sectionId === 'settings') {
+            loadSites();
+          }
+        });
+      });
+      
+      // Mobile menu toggle
+      document.getElementById('mobileMenuToggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('open');
+      });
+      
+      // Toggle switch functionality
+      document.getElementById('toggleSwitch').addEventListener('click', function() {
+        this.classList.toggle('active');
+        // Save state to storage
+        chrome.storage.local.set({ overlayVisible: this.classList.contains('active') });
+      });
+      
+      // Load saved state
+      chrome.storage.local.get(['overlayVisible'], (result) => {
+        if (result.overlayVisible !== undefined) {
+          const toggle = document.getElementById('toggleSwitch');
+          if (result.overlayVisible) {
+            toggle.classList.add('active');
+          }
+        }
+      });
+      
+      // Site management functions
+      const loadSites = () => {
+        chrome.storage.local.get(['userSites'], (result) => {
+          userSites = result.userSites || [];
+          displaySites();
+        });
+      };
+      
+      const displaySites = () => {
+        const sitesList = document.getElementById('sitesList');
+        const allSites = [...defaultSites, ...userSites];
+        
+        if (allSites.length === 0) {
+          sitesList.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px;">No sites configured</p>';
+          return;
+        }
+        
+        sitesList.innerHTML = allSites.map((site, index) => `
+          <div class="site-item" data-url="${site.url}">
+            <div class="site-info">
+              <div class="site-icon">${site.icon}</div>
+              <div class="site-details">
+                <h4>${site.name}</h4>
+                <p>${site.url}</p>
+              </div>
+            </div>
+            <div class="site-actions">
+              ${userSites.some(s => s.url === site.url) ? 
+                `<button class="btn-small danger" onclick="removeSite('${site.url}')">Remove</button>` : 
+                `<span style="color: #6c757d; font-size: 12px;">Default</span>`
+              }
+            </div>
+          </div>
+        `).join('');
+      };
+      
+      const addSite = () => {
+        const input = document.getElementById('newSiteUrl');
+        const url = input.value.trim();
+        
+        if (!url) {
+          alert('Please enter a valid URL');
+          return;
+        }
+        
+        try {
+          const urlObj = new URL(url);
+          const name = urlObj.hostname.replace('www.', '');
+          const icon = name.charAt(0).toUpperCase();
+          
+          const newSite = { url, name, icon };
+          
+          // Check if site already exists
+          if (userSites.some(site => site.url === url) || defaultSites.some(site => site.url === url)) {
+            alert('This site is already in the list');
+            return;
+          }
+          
+          userSites.push(newSite);
+          chrome.storage.local.set({ userSites }, () => {
+            displaySites();
+            input.value = '';
+            alert('Site added successfully!');
+          });
+          
+        } catch (error) {
+          alert('Please enter a valid URL');
+        }
+      };
+      
+      const removeSite = (url) => {
+        if (confirm('Are you sure you want to remove this site?')) {
+          userSites = userSites.filter(site => site.url !== url);
+          chrome.storage.local.set({ userSites }, () => {
+            displaySites();
+            alert('Site removed successfully!');
+          });
+        }
+      };
+      
+      // Add site button event listener
+      document.getElementById('addSiteBtn').addEventListener('click', addSite);
+      
+      // Enter key in input field
+      document.getElementById('newSiteUrl').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          addSite();
+        }
+      });
+      
+      // Login form submission
+      document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        // Simulate login
+        console.log('Login attempt:', { email, password });
+        
+        // Show user profile (in real app, this would be after successful authentication)
+        document.getElementById('loginForm').style.display = 'none';
+        document.querySelector('.profile-section').style.display = 'block';
+      });
+      
+      // Logout functionality
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        // Show login form
+        document.getElementById('loginForm').style.display = 'block';
+        document.querySelector('.profile-section').style.display = 'none';
+      });
+      
+      // History item click
+      document.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', () => {
+          // Add click feedback
+          item.style.transform = 'scale(0.98)';
+          setTimeout(() => {
+            item.style.transform = '';
+          }, 150);
+          
+          // Placeholder: in the future this would deep-link to a detail page
+          console.log('History item clicked:', item.querySelector('.item-title').textContent);
+        });
+      });
+      
+      // Initialize sites on page load
+      document.addEventListener('DOMContentLoaded', () => {
+        loadSites();
+      });
+    </script>
+  </body>
+</html>
