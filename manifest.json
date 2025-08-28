@@ -1,0 +1,95 @@
+{
+  "manifest_version": 3,
+  "name": "DripYou Float Overlay",
+  "version": "0.1.0",
+  "description": "Draggable floating overlay with basic layout, history stub, and options toggle.",
+  "background": {
+    "service_worker": "sw.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.myntra.com/*",
+    "https://www.ajio.com/*",
+    "https://www.flipkart.com/*",
+    "https://www.amazon.in/*",
+    "https://www.snapdeal.com/*",
+    "https://www.nykaa.com/*",
+    "https://www.purplle.com/*",
+    "https://www.limeroad.com/*",
+    "https://www.voonik.com/*",
+    "https://www.koovs.com/*",
+    "https://www.tatacliq.com/*",
+    "https://www.reliancedigital.in/*",
+    "https://www.croma.com/*",
+    "https://www.shopclues.com/*",
+    "https://www.paytmmall.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.myntra.com/*",
+        "https://www.ajio.com/*",
+        "https://www.flipkart.com/*",
+        "https://www.amazon.in/*",
+        "https://www.snapdeal.com/*",
+        "https://www.nykaa.com/*",
+        "https://www.purplle.com/*",
+        "https://www.limeroad.com/*",
+        "https://www.voonik.com/*",
+        "https://www.koovs.com/*",
+        "https://www.tatacliq.com/*",
+        "https://www.reliancedigital.in/*",
+        "https://www.croma.com/*",
+        "https://www.shopclues.com/*",
+        "https://www.paytmmall.com/*"
+      ],
+      "js": [
+        "content/panel.js"
+      ],
+      "css": [
+        "content/panel.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "pages/dashboard.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "DripYou Float Overlay",
+    "default_popup": "popup/popup.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "pages/dashboard.html",
+        "pages/history.html",
+        "content/panel.css",
+        "popup/popup.html",
+        "config/sites.json"
+      ],
+      "matches": [
+        "https://www.myntra.com/*",
+        "https://www.ajio.com/*",
+        "https://www.flipkart.com/*",
+        "https://www.amazon.in/*",
+        "https://www.snapdeal.com/*",
+        "https://www.nykaa.com/*",
+        "https://www.purplle.com/*",
+        "https://www.limeroad.com/*",
+        "https://www.voonik.com/*",
+        "https://www.koovs.com/*",
+        "https://www.tatacliq.com/*",
+        "https://www.reliancedigital.in/*",
+        "https://www.croma.com/*",
+        "https://www.shopclues.com/*",
+        "https://www.paytmmall.com/*"
+      ]
+    }
+  ]
+}

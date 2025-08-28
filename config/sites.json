@@ -1,0 +1,36 @@
+{
+  "defaultSites": [
+    "https://www.myntra.com/*",
+    "https://www.ajio.com/*",
+    "https://www.flipkart.com/*",
+    "https://www.amazon.in/*",
+    "https://www.snapdeal.com/*",
+    "https://www.nykaa.com/*",
+    "https://www.purplle.com/*",
+    "https://www.limeroad.com/*",
+    "https://www.voonik.com/*",
+    "https://www.koovs.com/*",
+    "https://www.tatacliq.com/*",
+    "https://www.reliancedigital.in/*",
+    "https://www.croma.com/*",
+    "https://www.shopclues.com/*",
+    "https://www.paytmmall.com/*"
+  ],
+  "siteNames": {
+    "https://www.myntra.com/*": "Myntra",
+    "https://www.ajio.com/*": "AJIO",
+    "https://www.flipkart.com/*": "Flipkart",
+    "https://www.amazon.in/*": "Amazon India",
+    "https://www.snapdeal.com/*": "Snapdeal",
+    "https://www.nykaa.com/*": "Nykaa",
+    "https://www.purplle.com/*": "Purplle",
+    "https://www.limeroad.com/*": "Limeroad",
+    "https://www.voonik.com/*": "Voonik",
+    "https://www.koovs.com/*": "Koovs",
+    "https://www.tatacliq.com/*": "Tata CLiQ",
+    "https://www.reliancedigital.in/*": "Reliance Digital",
+    "https://www.croma.com/*": "Croma",
+    "https://www.shopclues.com/*": "ShopClues",
+    "https://www.paytmmall.com/*": "Paytm Mall"
+  }
+}

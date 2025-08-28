@@ -1,0 +1,200 @@
+      /* Settings Styles */
+      .option-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+      }
+      
+      .option-card h3 {
+        margin: 0 0 16px 0;
+        color: #495057;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 0;
+      }
+      
+      .toggle-label {
+        font-size: 16px;
+        color: #495057;
+        font-weight: 500;
+      }
+      
+      .toggle-description {
+        font-size: 14px;
+        color: #6c757d;
+        margin-top: 8px;
+        line-height: 1.4;
+      }
+      
+      .toggle-switch {
+        position: relative;
+        width: 60px;
+        height: 32px;
+        background: #e9ecef;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      
+      .toggle-switch.active {
+        background: #007bff;
+      }
+      
+      .toggle-switch::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 28px;
+        height: 28px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      
+      .toggle-switch.active::after {
+        transform: translateX(28px);
+      }
+      
+      /* Site Management Styles */
+      .sites-section {
+        margin-top: 20px;
+      }
+      
+      .sites-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background: #f8f9fa;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      
+      .site-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+      }
+      
+      .site-item:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 8px rgba(0,102,255,0.1);
+      }
+      
+      .site-item:last-child {
+        margin-bottom: 0;
+      }
+      
+      .site-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .site-icon {
+        width: 24px;
+        height: 24px;
+        background: #007bff;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      
+      .site-details h4 {
+        margin: 0 0 4px 0;
+        font-size: 14px;
+        color: #495057;
+        font-weight: 500;
+      }
+      
+      .site-details p {
+        margin: 0;
+        font-size: 12px;
+        color: #6c757d;
+      }
+      
+      .site-actions {
+        display: flex;
+        gap: 8px;
+      }
+      
+      .btn-small {
+        padding: 6px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        background: white;
+        color: #6c757d;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .btn-small:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
+      
+      .btn-small.danger:hover {
+        border-color: #dc3545;
+        color: #dc3545;
+      }
+      
+      .add-site-form {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+      }
+      
+      .add-site-form input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      
+      .add-site-form input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
+      }
+      
+      .add-site-form button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        background: #007bff;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      
+      .add-site-form button:hover {
+        background: #0056b3;
+      }

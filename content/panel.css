@@ -1,0 +1,388 @@
+/* content/panel.css */
+:host {
+    all: initial;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  }
+  
+  .dy-container {
+    width: 280px;
+    height: 180px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    cursor: move;
+  }
+  
+  .dy-container:hover {
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+  }
+  
+  .dy-header {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    background: transparent;
+    flex-shrink: 0;
+    position: relative;
+  }
+  
+  .dy-drag-handle {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    cursor: move;
+    background-image: url('chrome-extension://__MSG_@@extension_id__/public/drag.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  
+  .dy-drag-handle:hover {
+    opacity: 1;
+  }
+  
+  .dy-close {
+    all: unset;
+    box-sizing: border-box;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 6px;
+    color: #666;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    z-index: 10;
+  }
+  .dy-close:hover {
+    color: #000;
+    background: #f0f0f0;
+  }
+  
+  .dy-body {
+    flex: 1;
+    display: flex;
+    gap: 12px;
+    padding: 0 12px 12px 12px;
+  }
+  
+  .dy-image-slot {
+    flex: 1;
+    border-radius: 16px;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 12px;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+  }
+  
+  .dy-image-slot:hover {
+    border-color: #adb5bd;
+  }
+  
+  /* Image placeholder states */
+  .dy-image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .dy-loading {
+    font-size: 24px;
+    animation: spin 1s linear infinite;
+  }
+  
+  .dy-loading-text {
+    font-size: 11px;
+    color: #6c757d;
+    max-width: 80px;
+    line-height: 1.2;
+  }
+  
+  .dy-error {
+    font-size: 24px;
+    color: #dc3545;
+  }
+  
+  .dy-error-text {
+    font-size: 11px;
+    color: #dc3545;
+    max-width: 80px;
+    line-height: 1.2;
+  }
+  
+  /* Extracted image display */
+  .dy-image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .dy-extracted-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .dy-image-info {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .dy-image-type {
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .dy-image-counter {
+    opacity: 0.8;
+  }
+  
+  .dy-image-nav {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+  }
+  
+  .dy-nav-btn {
+    all: unset;
+    width: 24px;
+    height: 24px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .dy-nav-btn:hover:not(:disabled) {
+    background: rgba(0,0,0,0.9);
+  }
+  
+  .dy-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  
+  /* Success message */
+  .dy-success-message {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    background: #28a745;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .dy-side-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .dy-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .dy-btn:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .dy-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  
+  /* More Options Bubble - positioned very close to the main overlay */
+  .dy-more-bubble {
+    position: absolute;
+    right: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: popIn 0.5s ease 0.8s forwards;
+  }
+  
+  .dy-more-bubble:hover {
+    border-color: #dee2e6;
+    background: #f8f9fa;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  }
+  
+  .dy-more-bubble:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+  
+  /* Menu positioned very close to the overlay */
+  .dy-menu {
+    position: absolute;
+    right: -120px;
+    top: calc(50% - 16px);
+    width: 120px;
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 4px;
+    z-index: 10;
+    opacity: 0;
+    transform: translateX(20px) scale(0.9);
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+  }
+  
+  .dy-menu:not(.dy-hidden) {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    pointer-events: auto;
+  }
+  
+  .dy-menu-item {
+    all: unset;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #495057;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dy-menu-item:hover {
+    background: #f8f9fa;
+    transform: translateX(2px);
+  }
+  
+  .dy-hidden {
+    display: none !important;
+  }
+  
+  /* Dragging state */
+  .dy-container.dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+  
+  /* Pop-in animation for the three dots */
+  @keyframes popIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-50%) scale(0.8);
+    }
+    50% {
+      opacity: 0.8;
+      transform: translateY(-50%) scale(1.1);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+  }
+  
+  /* Fade in animation for the main container */
+  .dy-container {
+    animation: fadeInUp 0.6s ease;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

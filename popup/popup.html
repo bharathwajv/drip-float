@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DripYou Float</title>
+  <style>
+    body {
+      width: 380px;
+      min-height: 500px;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #ffffff;
+      color: #333;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-radius: 0 0 16px 16px;
+    }
+
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border: 1px solid #e9ecef;
+    }
+
+    .section h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    /* Login Section */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #495057;
+    }
+
+    .input-group input {
+      padding: 10px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd8;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    /* User Info Section */
+    .user-info {
+      display: none;
+    }
+
+    .user-info.show {
+      display: block;
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 auto 12px;
+    }
+
+    .user-details {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .user-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 4px;
+    }
+
+    .user-email {
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    /* Token Usage */
+    .token-usage {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      margin-bottom: 16px;
+    }
+
+    .token-bar {
+      width: 100%;
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+
+    .token-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #28a745, #20c997);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .token-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .action-btn {
+      padding: 16px 12px;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-btn:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .action-btn::before {
+      font-size: 24px;
+    }
+
+    .action-btn.history::before {
+      content: '📋';
+    }
+
+    .action-btn.overlay::before {
+      content: '🎯';
+    }
+
+    .action-btn.settings::before {
+      content: '⚙️';
+    }
+
+    .action-btn.help::before {
+      content: '❓';
+    }
+
+    .action-btn span {
+      font-size: 12px;
+      font-weight: 500;
+      color: #495057;
+    }
+
+    /* Status Messages */
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    /* Loading States */
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>DripYou Float</h1>
+    <p>AI Fashion Collaboration Platform</p>
+  </div>
+
+  <div class="content">
+    <!-- Login Section -->
+    <div id="loginSection" class="section">
+      <h3>Sign In</h3>
+      <form class="login-form" id="loginForm">
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Enter your email" required>
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="loginBtn">
+          <span class="btn-text">Sign In</span>
+          <span class="spinner" style="display: none;"></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- User Info Section -->
+    <div id="userSection" class="section user-info">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-details">
+        <div class="user-name" id="userName">User Name</div>
+        <div class="user-email" id="userEmail">user@example.com</div>
+      </div>
+      
+      <!-- Token Usage -->
+      <div class="token-usage">
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #495057;">Token Usage</h4>
+        <div class="token-bar">
+          <div class="token-fill" id="tokenFill" style="width: 65%;"></div>
+        </div>
+        <div class="token-text">
+          <span>Used: 65/100</span>
+          <span>35 remaining</span>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" id="logoutBtn">Sign Out</button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section">
+      <h3>Quick Actions</h3>
+      <div class="quick-actions">
+        <button class="action-btn history" id="historyBtn">
+          <span>History</span>
+        </button>
+        <button class="action-btn overlay" id="overlayBtn">
+          <span>Toggle Overlay</span>
+        </button>
+        <button class="action-btn settings" id="settingsBtn">
+          <span>Settings</span>
+        </button>
+        <button class="action-btn help" id="helpBtn">
+          <span>Help</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="statusMessage" class="status" style="display: none;"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
