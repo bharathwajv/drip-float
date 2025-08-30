@@ -133,103 +133,13 @@
 
 
 
-    /* Resize Handle */
-    .resize-handle {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 20px;
-      height: 20px;
-      cursor: se-resize;
-      background: linear-gradient(-45deg, transparent 30%, #667eea 30%, #667eea 70%, transparent 70%);
-      border-radius: 0 0 8px 0;
-      opacity: 0.6;
-      transition: opacity 0.2s ease;
-    }
 
-    .resize-handle:hover {
-      opacity: 1;
-    }
-
-    .resize-handle::before {
-      content: '';
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      width: 8px;
-      height: 8px;
-      border-right: 2px solid #667eea;
-      border-bottom: 2px solid #667eea;
-    }
-
-    /* Resize toggle button */
-    .resize-toggle {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 24px;
-      height: 24px;
-      border: none;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      transition: all 0.2s ease;
-    }
-
-    .resize-toggle:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
-    }
-
-    .resize-toggle.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* Size Preset Buttons */
-    .size-presets {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 8px;
-      z-index: 1000;
-    }
-
-    .size-preset-btn {
-      padding: 6px 12px;
-      border: 1px solid #667eea;
-      border-radius: 6px;
-      background: white;
-      color: #667eea;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .size-preset-btn:hover {
-      background: #667eea;
-      color: white;
-      transform: translateY(-1px);
-    }
-
-    .size-preset-btn.active {
-      background: #667eea;
-      color: white;
-    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>Drip Float</h1>
     <p>AI Fashion Collaboration Platform</p>
-    <button class="resize-toggle" id="resizeToggle" title="Toggle Resizable">↔</button>
   </div>
 
   <div class="content">
@@ -262,18 +172,11 @@
 
 
     
-    <!-- Size Preset Buttons -->
-    <div id="sizePresets" class="size-presets" style="display: none;">
-      <button class="size-preset-btn" data-width="380" data-height="500">Small</button>
-      <button class="size-preset-btn" data-width="500" data-height="600">Medium</button>
-      <button class="size-preset-btn" data-width="600" data-height="700">Large</button>
-    </div>
+
   </div>
 
-  <script src="storageService.js"></script>
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
   
-  <!-- Resize Handle -->
-  <div class="resize-handle" id="resizeHandle" style="display: none;"></div>
+
 </body>
 </html>

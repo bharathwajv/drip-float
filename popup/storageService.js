@@ -88,32 +88,7 @@ class StorageService {
     await this.setUserSites(filteredSites);
   }
 
-  // Popup settings
-  async getPopupSettings() {
-    const result = await this.get(['popupSettings']);
-    return result.popupSettings || {
-      width: 380,
-      height: 500,
-      isResizable: true
-    };
-  }
 
-  async setPopupSettings(settings) {
-    await this.set({ popupSettings: settings });
-  }
-
-  async updatePopupSize(width, height) {
-    const currentSettings = await this.getPopupSettings();
-    currentSettings.width = width;
-    currentSettings.height = height;
-    await this.setPopupSettings(currentSettings);
-  }
-
-  async setResizable(resizable) {
-    const currentSettings = await this.getPopupSettings();
-    currentSettings.isResizable = resizable;
-    await this.setPopupSettings(currentSettings);
-  }
 
   // Clear all data
   async clearAll() {
@@ -130,6 +105,4 @@ class StorageService {
 }
 
 // Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = StorageService;
-}
+export { StorageService };

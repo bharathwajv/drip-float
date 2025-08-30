@@ -1,13 +1,7 @@
 // pages/dashboard.js
 
-// Default supported sites
-const defaultSites = [
-  { url: 'https://www.myntra.com', name: 'Myntra', icon: 'M' },
-  { url: 'https://www.ajio.com', name: 'AJIO', icon: 'A' },
-  { url: 'https://www.flipkart.com', name: 'Flipkart', icon: 'F' },
-  { url: 'https://www.amazon.in', name: 'Amazon India', icon: 'A' },
-  { url: 'https://www.nykaa.com', name: 'Nykaa', icon: 'N' }
-];
+// Import default sites from centralized config
+let defaultSites = [];
 
 let userSites = [];
 
@@ -82,7 +76,7 @@ const displaySites = () => {
       </div>
       <div class="site-actions">
         ${userSites.some(s => s.url === site.url) ? 
-          `<button class="btn-small danger" onclick="removeSite('${site.url}')">Remove</button>` : 
+          `<button class="btn-small danger" onclick="removeSite('${site.url}')" title="Remove site">🗑️</button>` : 
           `<span style="color: #6c757d; font-size: 12px;">Default</span>`
         }
       </div>
@@ -106,8 +100,9 @@ const addSite = () => {
     
     const newSite = { url, name, icon };
     
-    // Check if site already exists
-    if (userSites.some(site => site.url === url) || defaultSites.some(site => site.url === url)) {
+    // Check if site already exists (either in user sites or default sites)
+    if (userSites.some(site => site.url === url) || 
+        defaultSites.some(site => url.startsWith(site.url))) {
       alert('This site is already in the list');
       return;
     }
@@ -180,7 +175,22 @@ document.querySelectorAll('.history-item').forEach(item => {
 });
 
 // Initialize sites on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load default sites from centralized config
+  try {
+    const { DEFAULT_SITES } = await import('../config/sites.js');
+    defaultSites = DEFAULT_SITES;
+  } catch (error) {
+    console.error('Error loading default sites:', error);
+    // Fallback to basic sites if import fails
+    defaultSites = [
+      { url: 'https://www.myntra.com', name: 'Myntra', icon: 'M' },
+      { url: 'https://www.ajio.com', name: 'AJIO', icon: 'A' },
+      { url: 'https://www.flipkart.com', name: 'Flipkart', icon: 'F' },
+      { url: 'https://www.amazon.in', name: 'Amazon India', icon: 'A' },
+      { url: 'https://www.nykaa.com', name: 'Nykaa', icon: 'N' }
+    ];
+  }
   loadSites();
 });
 

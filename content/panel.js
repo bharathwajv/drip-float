@@ -10,6 +10,7 @@
     zIndex: 2147483647,
     width: '300px',
     height: '180px',
+    transition: 'width 0.3s ease, height 0.3s ease',
   });
   const shadow = root.attachShadow({ mode: 'open' });
 
@@ -37,8 +38,8 @@
         </div>
       </div>
       <div class="dy-side-buttons">
-        <button class="dy-btn" data-action="extract" title="Extract Images">📷</button>
-        <button class="dy-btn" data-action="generate" title="Generate AI Image">✨</button>
+        <button class="dy-btn" data-action="extract" title="Open Full Screen">↗</button>
+        <button class="dy-btn" data-action="generate" title="Download">⬇</button>
       </div>
     </div>
   `;
@@ -92,9 +93,11 @@
   let currentImages = [];
   let currentImageIndex = 0;
   let isMinimized = false;
-  let isResizing = false;
-  let startResizeX = 0, startResizeY = 0;
-  let startWidth = 0, startHeight = 0;
+  let isExpanded = false;
+  let originalWidth = 300;
+  let originalHeight = 180;
+  let expandedWidth = 0;
+  let expandedHeight = 0;
   let bubbleDragging = false;
   let bubbleStartX = 0, bubbleStartY = 0;
   let bubbleStartLeft = 0, bubbleStartTop = 0;
@@ -269,6 +272,9 @@
     
     if (prevBtn) prevBtn.addEventListener('click', showPreviousImage);
     if (nextBtn) nextBtn.addEventListener('click', showNextImage);
+    
+    // Update download button state
+    updateDownloadButtonState();
   };
 
   // Navigation functions
@@ -321,61 +327,125 @@
     `;
   };
 
+  // Download current image
+  const downloadCurrentImage = () => {
+    if (currentImages.length === 0 || !currentImages[currentImageIndex]) {
+      showImageError('No image to download');
+      return;
+    }
+
+    const currentImage = currentImages[currentImageIndex];
+    
+    try {
+      // Create a temporary link element for download
+      const link = document.createElement('a');
+      link.href = currentImage.url;
+      link.download = `dripfloat-image-${Date.now()}.jpg`;
+      link.target = '_blank';
+      
+      // Append to document, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showImageSuccess('Download started!');
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      showImageError('Download failed');
+    }
+  };
+
+  // Update download button state
+  const updateDownloadButtonState = () => {
+    const downloadBtn = container.querySelector('[data-action="generate"]');
+    if (downloadBtn) {
+      if (currentImages.length > 0) {
+        downloadBtn.disabled = false;
+        downloadBtn.classList.remove('dy-btn-disabled');
+        downloadBtn.title = 'Download';
+      } else {
+        downloadBtn.disabled = true;
+        downloadBtn.classList.add('dy-btn-disabled');
+        downloadBtn.title = 'No images to download';
+      }
+    }
+  };
+
   // Load saved dimensions from storage
   const loadSavedDimensions = () => {
     chrome.storage.local.get(['panelWidth', 'panelHeight'], (result) => {
       if (result.panelWidth && result.panelHeight) {
-        root.style.width = `${result.panelWidth}px`;
-        root.style.height = `${result.panelHeight}px`;
+        originalWidth = result.panelWidth;
+        originalHeight = result.panelHeight;
+        root.style.width = `${originalWidth}px`;
+        root.style.height = `${originalHeight}px`;
       }
     });
   };
 
   // Save dimensions to storage
   const saveDimensions = () => {
-    const width = parseInt(root.style.width);
-    const height = parseInt(root.style.height);
     chrome.storage.local.set({ 
-      panelWidth: width, 
-      panelHeight: height 
+      panelWidth: originalWidth, 
+      panelHeight: originalHeight 
     });
   };
 
-  // Resize functionality
-  const startResize = (e) => {
-    isResizing = true;
-    startResizeX = e.clientX;
-    startResizeY = e.clientY;
-    startWidth = parseInt(root.style.width);
-    startHeight = parseInt(root.style.height);
-    
-    document.addEventListener('mousemove', onResize);
-    document.addEventListener('mouseup', endResize);
-    e.preventDefault();
+  // Two-mode resize functionality
+  const toggleResize = () => {
+    if (isExpanded) {
+      // Collapse to original size
+      collapsePanel();
+    } else {
+      // Expand to 1/4 of browser size
+      expandPanel();
+    }
   };
 
-  const onResize = (e) => {
-    if (!isResizing) return;
+  const expandPanel = () => {
+    // Calculate 1/4 of browser size
+    expandedWidth = Math.floor(window.innerWidth * 0.25);
+    expandedHeight = Math.floor(window.innerHeight * 0.25);
     
-    const dx = e.clientX - startResizeX;
-    const dy = e.clientY - startResizeY;
+    // Ensure minimum size
+    expandedWidth = Math.max(400, expandedWidth);
+    expandedHeight = Math.max(300, expandedHeight);
     
-    const newWidth = Math.max(200, startWidth + dx);
-    const newHeight = Math.max(120, startHeight + dy);
+    // Animate expansion
+    root.style.transition = 'width 0.3s ease, height 0.3s ease';
+    root.style.width = `${expandedWidth}px`;
+    root.style.height = `${expandedHeight}px`;
     
-    root.style.width = `${newWidth}px`;
-    root.style.height = `${newHeight}px`;
+    isExpanded = true;
+    
+    // Update resize button icon
+    const resizeBtn = container.querySelector('.dy-resize');
+    resizeBtn.innerHTML = '⤢';
+    resizeBtn.title = 'Collapse';
+    
+    // Remove transition after animation
+    setTimeout(() => {
+      root.style.transition = '';
+    }, 300);
   };
 
-  const endResize = () => {
-    if (!isResizing) return;
+  const collapsePanel = () => {
+    // Animate collapse
+    root.style.transition = 'width 0.3s ease, height 0.3s ease';
+    root.style.width = `${originalWidth}px`;
+    root.style.height = `${originalHeight}px`;
     
-    isResizing = false;
-    document.removeEventListener('mousemove', onResize);
-    document.removeEventListener('mouseup', endResize);
+    isExpanded = false;
     
-    // Save new dimensions
-    saveDimensions();
+    // Update resize button icon
+    const resizeBtn = container.querySelector('.dy-resize');
+    resizeBtn.innerHTML = '⤡';
+    resizeBtn.title = 'Expand';
+    
+    // Remove transition after animation
+    setTimeout(() => {
+      root.style.transition = '';
+    }, 300);
   };
 
   // Minimize functionality
@@ -386,11 +456,8 @@
     menu.classList.add('dy-hidden');
     minimizedBubble.classList.remove('dy-hidden');
     
-    // Reset bubble to default position when minimizing
-    minimizedBubble.style.left = 'auto';
-    minimizedBubble.style.top = 'auto';
-    minimizedBubble.style.right = '24px';
-    minimizedBubble.style.bottom = '24px';
+    // Load saved bubble position or use default
+    loadBubblePosition();
     
     // Store minimized state
     chrome.storage.local.set({ panelMinimized: true });
@@ -543,8 +610,13 @@
     const dx = e.clientX - bubbleStartX;
     const dy = e.clientY - bubbleStartY;
     
-    minimizedBubble.style.left = `${bubbleStartLeft + dx}px`;
-    minimizedBubble.style.top = `${bubbleStartTop + dy}px`;
+    // Calculate new position
+    const newLeft = bubbleStartLeft + dx;
+    const newTop = bubbleStartTop + dy;
+    
+    // Apply new position
+    minimizedBubble.style.left = `${newLeft}px`;
+    minimizedBubble.style.top = `${newTop}px`;
     minimizedBubble.style.right = 'auto';
     minimizedBubble.style.bottom = 'auto';
     
@@ -608,19 +680,29 @@
 
   const saveBubblePosition = () => {
     const rect = minimizedBubble.getBoundingClientRect();
-    chrome.storage.local.set({
+    const position = {
       bubbleLeft: rect.left,
       bubbleTop: rect.top
-    });
+    };
+    console.log('Saving bubble position:', position);
+    chrome.storage.local.set(position);
   };
 
   const loadBubblePosition = () => {
     chrome.storage.local.get(['bubbleLeft', 'bubbleTop'], (result) => {
-      if (result.bubbleLeft && result.bubbleTop) {
+      if (result.bubbleLeft !== undefined && result.bubbleTop !== undefined) {
+        console.log('Loading bubble position:', result);
         minimizedBubble.style.left = `${result.bubbleLeft}px`;
         minimizedBubble.style.top = `${result.bubbleTop}px`;
         minimizedBubble.style.right = 'auto';
         minimizedBubble.style.bottom = 'auto';
+      } else {
+        console.log('No saved bubble position found, using default');
+        // Set default position if none saved
+        minimizedBubble.style.left = 'auto';
+        minimizedBubble.style.top = 'auto';
+        minimizedBubble.style.right = '24px';
+        minimizedBubble.style.bottom = '24px';
       }
     });
   };
@@ -633,16 +715,7 @@
   });
 
   // Resize button event listener
-  container.querySelector('.dy-resize').addEventListener('mousedown', startResize);
-  container.querySelector('.dy-resize').addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    startResize({
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      preventDefault: () => {}
-    });
-  });
+  container.querySelector('.dy-resize').addEventListener('click', toggleResize);
 
   // Minimize button event listener
   container.querySelector('.dy-minimize').addEventListener('click', minimizePanel);
@@ -687,10 +760,15 @@
   container.addEventListener('click', (e) => {
     const action = e.target.closest('.dy-btn')?.dataset.action;
     if (action === 'extract') {
-      extractAndDisplayImages();
+      // Open full screen
+      chrome.runtime.sendMessage({ type: 'OPEN_HISTORY_TAB' });
     } else if (action === 'generate') {
-      // Future: Generate AI image
-      showImageSuccess('AI generation coming soon!');
+      // Download functionality
+      if (currentImages.length > 0 && currentImages[currentImageIndex]) {
+        downloadCurrentImage();
+      } else {
+        showImageError('No image to download');
+      }
     }
   });
 
@@ -748,14 +826,25 @@
       const currentUrl = window.location.href;
       const hostname = window.location.hostname;
       
-      // Default supported sites
-      const defaultSites = [
-        'myntra.com',
-        'ajio.com',
-        'flipkart.com',
-        'amazon.in',
-        'nykaa.com'
-      ];
+      // Try to load default sites from centralized config
+      let defaultSites = [];
+      try {
+        const { DEFAULT_SITES } = await import(chrome.runtime.getURL('config/sites.js'));
+        defaultSites = DEFAULT_SITES.map(site => {
+          const url = new URL(site.url);
+          return url.hostname.replace('www.', '');
+        });
+      } catch (importError) {
+        console.error('Error importing sites config:', importError);
+        // Fallback to basic sites
+        defaultSites = [
+          'myntra.com',
+          'ajio.com',
+          'flipkart.com',
+          'amazon.in',
+          'nykaa.com'
+        ];
+      }
       
       // Check if current hostname is in default sites
       if (defaultSites.some(site => hostname.includes(site))) {
@@ -788,6 +877,10 @@
   loadSavedDimensions();
   loadSavedState();
   loadBubblePosition();
+  
+  // Initialize original dimensions
+  originalWidth = parseInt(root.style.width) || 300;
+  originalHeight = parseInt(root.style.height) || 180;
 
   // Initialize image extractor when page is ready
   if (document.readyState === 'loading') {
@@ -795,4 +888,14 @@
   } else {
     initImageExtractor();
   }
+  
+  // Initialize download button state
+  updateDownloadButtonState();
+  
+  // Save bubble position before page unload
+  window.addEventListener('beforeunload', () => {
+    if (isMinimized && minimizedBubble.style.display !== 'none') {
+      saveBubblePosition();
+    }
+  });
 })();

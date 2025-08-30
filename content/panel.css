@@ -16,6 +16,7 @@
     overflow: hidden;
     position: relative;
     cursor: move;
+    transition: width 0.3s ease, height 0.3s ease;
   }
   
   .dy-container:hover {
@@ -70,6 +71,11 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.2s ease;
   }
   .dy-close:hover {
     color: #000;
@@ -79,7 +85,7 @@
   .dy-resize {
     all: unset;
     box-sizing: border-box;
-    cursor: nw-resize;
+    cursor: pointer;
     font-size: 16px;
     line-height: 1;
     padding: 6px;
@@ -92,6 +98,11 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.2s ease;
   }
 
   .dy-resize:hover {
@@ -115,6 +126,11 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
+    position: absolute;
+    right: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.2s ease;
   }
 
   .dy-minimize:hover {
@@ -138,6 +154,8 @@
     cursor: pointer;
     z-index: 2147483647;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    /* Prevent any unwanted positioning changes */
+    transform-origin: center;
   }
 
   .dy-bubble-content {
@@ -159,14 +177,14 @@
     all: unset;
     box-sizing: border-box;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 18px;
     line-height: 1;
-    padding: 4px;
+    padding: 6px;
     color: #666;
     font-weight: bold;
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,14 +204,14 @@
     all: unset;
     box-sizing: border-box;
     cursor: move;
-    font-size: 14px;
+    font-size: 18px;
     line-height: 1;
-    padding: 4px;
+    padding: 6px;
     color: #666;
     font-weight: bold;
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -266,6 +284,8 @@
   .dy-minimized-bubble.dragging {
     cursor: grabbing;
     user-select: none;
+    /* Ensure smooth positioning during drag */
+    transition: none;
   }
 
 
@@ -451,7 +471,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 18px;
+    transition: all 0.2s ease;
   }
   .dy-btn:hover {
     background: #f8f9fa;
@@ -463,6 +484,20 @@
   .dy-btn:active {
     transform: translateY(0);
     box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  .dy-btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8f9fa;
+    border-color: #dee2e6;
+  }
+
+  .dy-btn-disabled:hover {
+    transform: none;
+    box-shadow: none;
+    background: #f8f9fa;
+    border-color: #dee2e6;
   }
   
   /* More Options Bubble - positioned very close to the main overlay */

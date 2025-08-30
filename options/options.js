@@ -31,25 +31,37 @@ class DripFloatOptions {
 
   async loadDefaultSites() {
     try {
-      const response = await fetch(chrome.runtime.getURL('config/sites.json'));
-      const config = await response.json();
-      this.defaultSites = config.defaultSites || [];
-      this.siteNames = config.siteNames || {};
+      // Try to load from centralized sites configuration
+      const { DEFAULT_SITES } = await import('../config/sites.js');
+      this.defaultSites = DEFAULT_SITES.map(site => site.pattern);
+      this.siteNames = {};
+      DEFAULT_SITES.forEach(site => {
+        this.siteNames[site.pattern] = site.name;
+      });
     } catch (error) {
       console.error('Error loading default sites:', error);
-      // Fallback to hardcoded sites
-      this.defaultSites = [
-        'https://www.myntra.com/*',
-        'https://www.ajio.com/*',
-        'https://www.flipkart.com/*',
-        'https://www.amazon.in/*'
-      ];
-      this.siteNames = {
-        'https://www.myntra.com/*': 'Myntra',
-        'https://www.ajio.com/*': 'AJIO',
-        'https://www.flipkart.com/*': 'Flipkart',
-        'https://www.amazon.in/*': 'Amazon India'
-      };
+      // Fallback to sites.json if import fails
+      try {
+        const response = await fetch(chrome.runtime.getURL('config/sites.json'));
+        const config = await response.json();
+        this.defaultSites = config.defaultSites || [];
+        this.siteNames = config.siteNames || {};
+      } catch (jsonError) {
+        console.error('Error loading sites.json:', jsonError);
+        // Final fallback to basic sites
+        this.defaultSites = [
+          'https://www.myntra.com/*',
+          'https://www.ajio.com/*',
+          'https://www.flipkart.com/*',
+          'https://www.amazon.in/*'
+        ];
+        this.siteNames = {
+          'https://www.myntra.com/*': 'Myntra',
+          'https://www.ajio.com/*': 'AJIO',
+          'https://www.flipkart.com/*': 'Flipkart',
+          'https://www.amazon.in/*': 'Amazon India'
+        };
+      }
     }
   }
 
@@ -115,7 +127,7 @@ class DripFloatOptions {
         </div>
       </div>
       <div class="site-actions">
-        ${!isDefault ? `<button class="btn-small danger remove-site" data-url="${url}">Remove</button>` : ''}
+        ${!isDefault ? `<button class="btn-small danger remove-site" data-url="${url}" title="Remove site">🗑️</button>` : ''}
       </div>
     `;
 

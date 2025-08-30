@@ -35,7 +35,8 @@
       "css": [
         "content/panel.css"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "type": "module"
     }
   ],
   "options_ui": {
@@ -66,6 +67,7 @@
         "options/options.html",
         "options/options.js",
         "config/sites.json",
+        "config/sites.js",
         "public/fav_icon_logo.png"
       ],
       "matches": [

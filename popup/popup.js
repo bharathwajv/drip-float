@@ -1,4 +1,6 @@
 // popup/popup.js
+import { StorageService } from './storageService.js';
+
 (() => {
   // Initialize storage service
   const storageService = new StorageService();
@@ -8,15 +10,9 @@
   const overlayBtn = document.getElementById('overlayBtn');
   const overlayBtnText = document.getElementById('overlayBtnText');
   const settingsBtn = document.getElementById('settingsBtn');
-  const resizeToggle = document.getElementById('resizeToggle');
-  const resizeHandle = document.getElementById('resizeHandle');
   const addCurrentSiteBtn = document.getElementById('addCurrentSiteBtn');
-  const sizePresets = document.getElementById('sizePresets');
 
   // State
-  let isResizable = true;
-  let isResizing = false;
-  let startX, startY, startWidth, startHeight;
   let overlayVisible = false;
 
   // Initialize
@@ -56,34 +52,16 @@
   const loadPopupSettings = async () => {
     try {
       console.log('Loading popup settings...');
-      const settings = await storageService.getPopupSettings();
-      console.log('Loaded settings:', settings);
-      isResizable = settings.isResizable;
-      
-      // Apply saved dimensions
-      if (settings.width && settings.height) {
-        document.body.style.width = `${settings.width}px`;
-        document.body.style.height = `${settings.height}px`;
-        console.log('Applied saved dimensions:', settings.width, 'x', settings.height);
-        // Set active size preset button
-        setActiveSizePreset(settings.width, settings.height);
-      } else {
-        // Set default dimensions if none exist
-        document.body.style.width = '380px';
-        document.body.style.height = '500px';
-        console.log('Applied default dimensions: 380 x 500');
-        setActiveSizePreset(380, 500);
-      }
-      
-      updateResizeUI();
+      // Set default dimensions
+      document.body.style.width = '380px';
+      document.body.style.height = '500px';
+      console.log('Applied default dimensions: 380 x 500');
     } catch (error) {
       console.error('Error loading popup settings:', error);
-      // Use default settings if there's an error
-      isResizable = true;
+      // Use default dimensions if there's an error
       document.body.style.width = '380px';
       document.body.style.height = '500px';
       console.log('Applied fallback dimensions: 380 x 500');
-      updateResizeUI();
     }
   };
 
@@ -93,123 +71,11 @@
     settingsBtn.addEventListener('click', openDashboard);
     overlayBtn.addEventListener('click', toggleOverlay);
     addCurrentSiteBtn.addEventListener('click', addCurrentSite);
-    resizeToggle.addEventListener('click', toggleResizable);
-    
-    // Resize handle events
-    resizeHandle.addEventListener('mousedown', startResize);
-    document.addEventListener('mousemove', handleResize);
-    document.addEventListener('mouseup', stopResize);
-    
-    // Size preset button events
-    document.querySelectorAll('.size-preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const width = parseInt(btn.dataset.width);
-        const height = parseInt(btn.dataset.height);
-        setPopupSize(width, height);
-        
-        // Update active state
-        document.querySelectorAll('.size-preset-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
   };
 
 
 
-  // Toggle resizable functionality
-  const toggleResizable = async () => {
-    try {
-      console.log('Toggling resizable, current state:', isResizable);
-      isResizable = !isResizable;
-      await storageService.setResizable(isResizable);
-      updateResizeUI();
-      console.log(`Resizable ${isResizable ? 'enabled' : 'disabled'}`);
-    } catch (error) {
-      console.error('Error toggling resizable:', error);
-      // Revert the change if there's an error
-      isResizable = !isResizable;
-      updateResizeUI();
-    }
-  };
 
-  // Update resize UI
-  const updateResizeUI = () => {
-    console.log('Updating resize UI, isResizable:', isResizable);
-    if (isResizable) {
-      resizeHandle.style.display = 'block';
-      sizePresets.style.display = 'flex';
-      resizeToggle.classList.remove('disabled');
-      resizeToggle.innerHTML = '↔';
-      resizeToggle.title = 'Disable Resizable';
-      console.log('Resize enabled - handle visible, toggle active');
-    } else {
-      resizeHandle.style.display = 'none';
-      sizePresets.style.display = 'none';
-      resizeToggle.classList.add('disabled');
-      resizeToggle.innerHTML = '⊞';
-      resizeToggle.title = 'Enable Resizable';
-      console.log('Resize disabled - handle hidden, toggle inactive');
-    }
-  };
-
-  // Start resize operation
-  const startResize = (e) => {
-    if (!isResizable) return;
-    
-    isResizing = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startWidth = parseInt(document.body.style.width) || 380;
-    startHeight = parseInt(document.body.style.height) || 500;
-    
-    showResizeStatus('Resizing...');
-    e.preventDefault();
-  };
-
-  // Handle resize operation
-  const handleResize = (e) => {
-    if (!isResizing) return;
-    
-    const deltaX = e.clientX - startX;
-    const deltaY = e.clientY - startY;
-    
-    const newWidth = Math.max(300, startWidth + deltaX);
-    const newHeight = Math.max(400, startHeight + deltaY);
-    
-    // Apply new dimensions
-    document.body.style.width = `${newWidth}px`;
-    document.body.style.height = `${newHeight}px`;
-    
-    // Also try to resize the popup window if possible
-    try {
-      if (window.resizeTo) {
-        window.resizeTo(newWidth, newHeight);
-      }
-    } catch (e) {
-      console.log('Could not resize popup window (Chrome extension limitation)');
-    }
-  };
-
-  // Stop resize operation
-  const stopResize = async () => {
-    if (!isResizing) return;
-    
-    isResizing = false;
-    
-    // Save new dimensions
-    const newWidth = parseInt(document.body.style.width);
-    const newHeight = parseInt(document.body.style.height);
-    
-    if (newWidth && newHeight) {
-      try {
-        await storageService.updatePopupSize(newWidth, newHeight);
-        showResizeStatus(`Size: ${newWidth} × ${newHeight}`);
-      } catch (error) {
-        console.error('Error saving popup dimensions:', error);
-        showStatus('Failed to save popup size', 'error');
-      }
-    }
-  };
 
   // Toggle overlay
   const toggleOverlay = () => {
@@ -252,16 +118,12 @@
       const userSites = await storageService.getUserSites();
       
       // Check if site already exists (either in user sites or default sites)
-      const defaultSites = [
-        'https://www.myntra.com',
-        'https://www.ajio.com', 
-        'https://www.flipkart.com',
-        'https://www.amazon.in',
-        'https://www.nykaa.com'
-      ];
+      // Import default sites from centralized config
+      const { DEFAULT_SITES } = await import('../config/sites.js');
+      const defaultSiteUrls = DEFAULT_SITES.map(site => site.url);
       
       if (userSites.some(site => site.url === currentUrl) || 
-          defaultSites.includes(currentUrl)) {
+          defaultSiteUrls.some(url => currentUrl.startsWith(url))) {
         console.log('This site is already in your supported sites list');
         return;
       }
@@ -297,33 +159,7 @@
 
 
 
-  // Set popup size
-  const setPopupSize = async (width, height) => {
-    document.body.style.width = `${width}px`;
-    document.body.style.height = `${height}px`;
-    
-    try {
-      await storageService.updatePopupSize(width, height);
-      console.log(`Size set to ${width} × ${height}`);
-      setActiveSizePreset(width, height);
-    } catch (error) {
-      console.error('Error saving popup size:', error);
-    }
-  };
 
-  // Set active size preset button
-  const setActiveSizePreset = (width, height) => {
-    document.querySelectorAll('.size-preset-btn').forEach(btn => {
-      const btnWidth = parseInt(btn.dataset.width);
-      const btnHeight = parseInt(btn.dataset.height);
-      
-      if (btnWidth === width && btnHeight === height) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
-    });
-  };
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
