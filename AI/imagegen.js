@@ -117,6 +117,7 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
                 ]
             }]
         };
+        console.error('api request :', requestPayload);
 
         // Make API call to Gemini
         const response = await fetch(`${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
@@ -127,12 +128,16 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
             body: JSON.stringify(requestPayload)
         });
 
+        console.error('api response :', response);
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
         }
 
         const result = await response.json();
+
+        console.error('api result :', result);
         
         // Extract the generated image from the response
         const generatedImage = extractGeneratedImage(result);

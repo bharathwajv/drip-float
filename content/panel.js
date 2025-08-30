@@ -197,6 +197,7 @@
   // Initialize image extractor when DOM is ready
   const initImageExtractor = async () => {
     try {
+      console.log('Initializing image extractor...');
       // Load the image extractor script
       const script = document.createElement('script');
       script.src = chrome.runtime.getURL('content/imageExtractor.js');
@@ -931,6 +932,7 @@
     
     // Check options to decide if the overlay should be shown by default
     chrome.runtime.sendMessage({ type: 'GET_OVERLAY_STATE' }, async (res) => {
+      console.log('GET_OVERLAY_STATE:', res);
       if (res?.ok) {
         // Check if current site is supported before showing overlay
         const isSiteSupported = await checkIfSiteSupported();
@@ -938,7 +940,7 @@
           // Show overlay on non-supported sites
           toggleOverlay(res.visible);
         } else {
-          console.log('Current site is supported, overlay will not be shown');
+          console.log('Current site is supported, overlay will be shown');
         }
       }
     });
@@ -1003,20 +1005,24 @@
         return false;
       }
     };
-
+    
+    console.log('document.readyState:', document.readyState);
     // Load saved dimensions and state
     loadSavedDimensions();
     loadSavedState();
     loadBubblePosition();
     
+    console.log('document.readyState:', document.readyState);
     // Initialize original dimensions
     originalWidth = parseInt(root.style.width) || 400;
     originalHeight = parseInt(root.style.height) || 300;
 
     // Initialize image extractor when page is ready
     if (document.readyState === 'loading') {
+      console.log('Document is loading, adding DOMContentLoaded listener...');
       document.addEventListener('DOMContentLoaded', initImageExtractor);
     } else {
+      console.log('Document is already loaded, initializing image extractor...');
       initImageExtractor();
     }
     

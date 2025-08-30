@@ -44,7 +44,6 @@
     width: 24px;
     height: 24px;
     cursor: move;
-    background-image: url('chrome-extension://__MSG_@@extension_id__/public/drag.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -168,8 +167,8 @@
   }
 
   .dy-bubble-logo {
-    width: 62px;
-    height: 62px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
     opacity: 0.9;
   }
