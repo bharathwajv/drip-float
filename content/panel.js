@@ -1,25 +1,8 @@
 // content/panel.js
 (() => {
-  // Check if this site should have access to the overlay
-  const checkSiteAccess = async () => {
-    try {
-      const response = await chrome.runtime.sendMessage({ type: 'CHECK_SITE_ACCESS' });
-      return response && response.hasAccess;
-    } catch (error) {
-      console.error('Error checking site access:', error);
-      return false;
-    }
-  };
-
-  // Initialize only if site has access
-  const init = async () => {
-    const hasAccess = await checkSiteAccess();
-    if (!hasAccess) {
-      console.log('Drip Float: Site not in allowed list, overlay disabled');
-      return;
-    }
-    
-    console.log('Drip Float: Site allowed, initializing overlay');
+  // Initialize the overlay
+  const init = () => {
+    console.log('Drip Float: Starting initialization...');
     createOverlay();
   };
 
@@ -39,80 +22,81 @@
     });
     const shadow = root.attachShadow({ mode: 'open' });
 
-  // Link the external stylesheet
-  const styleLink = document.createElement('link');
-  styleLink.rel = 'stylesheet';
-  styleLink.href = chrome.runtime.getURL('content/panel.css');
-  shadow.appendChild(styleLink);
+    // Link the external stylesheet
+    const styleLink = document.createElement('link');
+    styleLink.rel = 'stylesheet';
+    styleLink.href = chrome.runtime.getURL('content/panel.css');
+    shadow.appendChild(styleLink);
 
-  // Main floating panel container
-  const container = document.createElement('div');
-  container.className = 'dy-container';
-  container.innerHTML = `
-    <div class="dy-header">
-      <button class="dy-resize" aria-label="Resize"><img src="${chrome.runtime.getURL('icons/maximize-2.svg')}" alt="Expand" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⤡</span></button>
-      <div class="dy-drag-handle" title="Drag to move"></div>
-      <button class="dy-minimize" aria-label="Minimize"><img src="${chrome.runtime.getURL('icons/minus.svg')}" alt="Minimize" width="18" height="18" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">−</span></button>
-      <button class="dy-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/x.svg')}" alt="Close" width="18" height="18" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
-    </div>
-    <div class="dy-body">
-      <div class="dy-image-slot" aria-label="Image view">
-        <div class="dy-image-placeholder">
-          <div class="dy-loading">🔄</div>
-          <div class="dy-loading-text">Extracting images...</div>
+    // Main floating panel container
+    const container = document.createElement('div');
+    container.className = 'dy-container';
+    container.innerHTML = `
+      <div class="dy-header">
+        <button class="dy-resize" aria-label="Resize"><img src="${chrome.runtime.getURL('icons/maximize-2.svg')}" alt="Expand" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⤡</span></button>
+        <div class="dy-drag-handle" title="Drag to move"></div>
+        <button class="dy-minimize" aria-label="Minimize"><img src="${chrome.runtime.getURL('icons/minus.svg')}" alt="Minimize" width="18" height="18" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">−</span></button>
+        <button class="dy-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/x.svg')}" alt="Close" width="18" height="18" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
+      </div>
+      <div class="dy-body">
+        <div class="dy-image-slot" aria-label="Image view">
+          <div class="dy-image-placeholder">
+            <div class="dy-loading">🔄</div>
+            <div class="dy-loading-text">Extracting images...</div>
+          </div>
+        </div>
+        <div class="dy-side-buttons">
+          <button class="dy-btn" data-action="more" title="More Options"><img src="${chrome.runtime.getURL('icons/text-align-justify.svg')}" alt="More Options" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⋯</span></button>
+          <button class="dy-btn" data-action="extract" title="Open Full Screen"><img src="${chrome.runtime.getURL('icons/square-arrow-out-up-right.svg')}" alt="Open Full Screen" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">↗</span></button>
+          <button class="dy-btn" data-action="generate" title="Download"><img src="${chrome.runtime.getURL('icons/download.svg')}" alt="Download" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⬇</span></button>
         </div>
       </div>
-      <div class="dy-side-buttons">
-        <button class="dy-btn" data-action="more" title="More Options"><img src="${chrome.runtime.getURL('icons/text-align-justify.svg')}" alt="More Options" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⋯</span></button>
-        <button class="dy-btn" data-action="extract" title="Open Full Screen"><img src="${chrome.runtime.getURL('icons/square-arrow-out-up-right.svg')}" alt="Open Full Screen" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">↗</span></button>
-        <button class="dy-btn" data-action="generate" title="Download"><img src="${chrome.runtime.getURL('icons/download.svg')}" alt="Download" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⬇</span></button>
+    `;
+
+    // Minimized bubble container
+    const minimizedBubble = document.createElement('div');
+    minimizedBubble.className = 'dy-minimized-bubble dy-hidden';
+    minimizedBubble.innerHTML = `
+      <button class="dy-bubble-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/circle-x.svg')}" alt="Close" width="14" height="14" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
+      <div class="dy-bubble-content">
+        <img src="${chrome.runtime.getURL('public/fav_icon_logo.png')}" alt="DripFloat" class="dy-bubble-logo" />
       </div>
-    </div>
-  `;
+    `;
 
-  // Minimized bubble container
-  const minimizedBubble = document.createElement('div');
-  minimizedBubble.className = 'dy-minimized-bubble dy-hidden';
-  minimizedBubble.innerHTML = `
-    <button class="dy-bubble-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/circle-x.svg')}" alt="Close" width="14" height="14" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
-    <div class="dy-bubble-content">
-      <img src="${chrome.runtime.getURL('public/fav_icon_logo.png')}" alt="DripFloat" class="dy-bubble-logo" />
-    </div>
-  `;
+    // Append elements to the shadow DOM
+    shadow.appendChild(container);
+    shadow.appendChild(minimizedBubble);
+    
+    // Add dropdown menu for more options
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'dy-dropdown-menu dy-hidden';
+    dropdownMenu.innerHTML = `
+      <button class="dy-dropdown-item" data-menu="history">History</button>
+      <button class="dy-dropdown-item" data-menu="open-full">Open Full Page</button>
+      <button class="dy-dropdown-item" data-menu="extract-images">Extract Images</button>
+    `;
+    shadow.appendChild(dropdownMenu);
+    
+    document.documentElement.appendChild(root);
+    
+    // Initialize all the functionality after creating the overlay
+    initializeOverlayFunctionality(root, shadow, container, minimizedBubble, dropdownMenu);
+  };
 
-
-
-
-
-  // Append elements to the shadow DOM
-  shadow.appendChild(container);
-  shadow.appendChild(minimizedBubble);
-  
-  // Add dropdown menu for more options
-  const dropdownMenu = document.createElement('div');
-  dropdownMenu.className = 'dy-dropdown-menu dy-hidden';
-  dropdownMenu.innerHTML = `
-    <button class="dy-dropdown-item" data-menu="history">History</button>
-    <button class="dy-dropdown-item" data-menu="open-full">Open Full Page</button>
-    <button class="dy-dropdown-item" data-menu="extract-images">Extract Images</button>
-  `;
-  shadow.appendChild(dropdownMenu);
-  
-  document.documentElement.appendChild(root);
-  }; // End of createOverlay function
-
-  // Initialize image extractor
-  let imageExtractor = null;
-  let currentImages = [];
-  let currentImageIndex = 0;
-  let isMinimized = false;
-  let isExpanded = false;
-  let originalWidth = 0;
-  let originalHeight = 0;
-  let expandedWidth = 0;
-  let expandedHeight = 0;
-  let dragEndTime = 0;
-  const CLICK_DELAY = 150; // 150ms delay to prevent accidental clicks after drag
+  // Initialize all overlay functionality
+  const initializeOverlayFunctionality = (root, shadow, container, minimizedBubble, dropdownMenu) => {
+    // Initialize image extractor
+    let imageExtractor = null;
+    let currentImages = [];
+    let currentImageIndex = 0;
+    let isMinimized = false;
+    let isExpanded = false;
+    let originalWidth = 0;
+    let originalHeight = 0;
+    let expandedWidth = 0;
+    let expandedHeight = 0;
+    let dragEndTime = 0;
+    const CLICK_DELAY = 150; // 150ms delay to prevent accidental clicks after drag
 
   // Fallback function to get og:image from the page
   const getOGImageFromPage = () => {
@@ -755,115 +739,115 @@
 
 
   
-  // Function to show/hide overlay
-  const toggleOverlay = (visible) => {
-    if (visible) {
-      root.style.display = 'block';
-    } else {
-      root.style.display = 'none';
-    }
-  };
-
-  // Listen for messages from popup or service worker
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'TOGGLE_OVERLAY') {
-      toggleOverlay(message.visible);
-      sendResponse({ ok: true });
-    }
-  });
-  
-  // Check options to decide if the overlay should be shown by default
-  chrome.runtime.sendMessage({ type: 'GET_OVERLAY_STATE' }, async (res) => {
-    if (res?.ok) {
-      // Check if current site is supported before showing overlay
-      const isSiteSupported = await checkIfSiteSupported();
-      if (isSiteSupported) {
-        toggleOverlay(res.visible);
+    // Function to show/hide overlay
+    const toggleOverlay = (visible) => {
+      if (visible) {
+        root.style.display = 'block';
       } else {
-        console.log('Current site is not supported, overlay will not be shown');
+        root.style.display = 'none';
       }
-    }
-  });
+    };
 
-  // Check if current site is supported
-  const checkIfSiteSupported = async () => {
-    try {
-      const currentUrl = window.location.href;
-      const hostname = window.location.hostname;
-      
-      // Try to load default sites from centralized config
-      let defaultSites = [];
+    // Listen for messages from popup or service worker
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'TOGGLE_OVERLAY') {
+        toggleOverlay(message.visible);
+        sendResponse({ ok: true });
+      }
+    });
+    
+    // Check options to decide if the overlay should be shown by default
+    chrome.runtime.sendMessage({ type: 'GET_OVERLAY_STATE' }, async (res) => {
+      if (res?.ok) {
+        // Check if current site is supported before showing overlay
+        const isSiteSupported = await checkIfSiteSupported();
+        if (isSiteSupported) {
+          toggleOverlay(res.visible);
+        } else {
+          console.log('Current site is not supported, overlay will not be shown');
+        }
+      }
+    });
+
+    // Check if current site is supported
+    const checkIfSiteSupported = async () => {
       try {
-        const { DEFAULT_SITES } = await import(chrome.runtime.getURL('config/sites.js'));
-        defaultSites = DEFAULT_SITES.map(site => {
-          const url = new URL(site.url);
-          return url.hostname.replace('www.', '');
-        });
-      } catch (importError) {
-        console.error('Error importing sites config:', importError);
-        // Fallback to basic sites
-        defaultSites = [
-          'myntra.com',
-          'ajio.com',
-          'flipkart.com',
-          'amazon.in',
-          'nykaa.com'
-        ];
-      }
-      
-      // Check if current hostname is in default sites
-      if (defaultSites.some(site => hostname.includes(site))) {
-        return true;
-      }
-      
-      // Check user-added sites
-      return new Promise((resolve) => {
-        chrome.storage.local.get(['userSites'], (result) => {
-          const userSites = result.userSites || [];
-          const isSupported = userSites.some(site => {
-            try {
-              const siteHostname = new URL(site.url).hostname;
-              return hostname === siteHostname || hostname.includes(siteHostname);
-            } catch (e) {
-              return false;
-            }
+        const currentUrl = window.location.href;
+        const hostname = window.location.hostname;
+        
+        // Try to load default sites from centralized config
+        let defaultSites = [];
+        try {
+          const { DEFAULT_SITES } = await import(chrome.runtime.getURL('config/sites.js'));
+          defaultSites = DEFAULT_SITES.map(site => {
+            const url = new URL(site.url);
+            return url.hostname.replace('www.', '');
           });
-          resolve(isSupported);
+        } catch (importError) {
+          console.error('Error importing sites config:', importError);
+          // Fallback to basic sites
+          defaultSites = [
+            'myntra.com',
+            'ajio.com',
+            'flipkart.com',
+            'amazon.in',
+            'nykaa.com'
+          ];
+        }
+        
+        // Check if current hostname is in default sites
+        if (defaultSites.some(site => hostname.includes(site))) {
+          return true;
+        }
+        
+        // Check user-added sites
+        return new Promise((resolve) => {
+          chrome.storage.local.get(['userSites'], (result) => {
+            const userSites = result.userSites || [];
+            const isSupported = userSites.some(site => {
+              try {
+                const siteHostname = new URL(site.url).hostname;
+                return hostname === siteHostname || hostname.includes(siteHostname);
+              } catch (e) {
+                return false;
+              }
+            });
+            resolve(isSupported);
+          });
         });
-      });
-      
-    } catch (error) {
-      console.error('Error checking site support:', error);
-      return false;
+        
+      } catch (error) {
+        console.error('Error checking site support:', error);
+        return false;
+      }
+    };
+
+    // Load saved dimensions and state
+    loadSavedDimensions();
+    loadSavedState();
+    loadBubblePosition();
+    
+    // Initialize original dimensions
+    originalWidth = parseInt(root.style.width) || 400;
+    originalHeight = parseInt(root.style.height) || 300;
+
+    // Initialize image extractor when page is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initImageExtractor);
+    } else {
+      initImageExtractor();
     }
-  };
-
-  // Load saved dimensions and state
-  loadSavedDimensions();
-  loadSavedState();
-  loadBubblePosition();
-  
-  // Initialize original dimensions
-  originalWidth = parseInt(root.style.width) || 400;
-  originalHeight = parseInt(root.style.height) || 300;
-
-  // Initialize image extractor when page is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initImageExtractor);
-  } else {
-    initImageExtractor();
-  }
-  
-  // Initialize download button state
-  updateDownloadButtonState();
-  
-  // Save bubble position before page unload
-  window.addEventListener('beforeunload', () => {
-    if (isMinimized && minimizedBubble.style.display !== 'none') {
-      saveBubblePosition();
-    }
-  });
-
+    
+    // Initialize download button state
+    updateDownloadButtonState();
+    
+    // Save bubble position before page unload
+    window.addEventListener('beforeunload', () => {
+      if (isMinimized && minimizedBubble.style.display !== 'none') {
+        saveBubblePosition();
+      }
+    });
+  }; // End of initializeOverlayFunctionality
 
   // Start the initialization
   init();

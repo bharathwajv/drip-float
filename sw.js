@@ -54,8 +54,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   
   if (msg?.type === 'CHECK_SITE_ACCESS') {
+    console.log('Service worker: Received CHECK_SITE_ACCESS message from:', sender.tab.url);
     // Check if current site should have access to the overlay
     checkSiteAccess(sender.tab.url).then(hasAccess => {
+      console.log('Service worker: Sending site access response:', hasAccess);
       sendResponse({ ok: true, hasAccess });
     });
     return true; // async
@@ -65,6 +67,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // Check if a site should have access to the overlay
 async function checkSiteAccess(url) {
   try {
+    console.log('Checking site access for:', url);
+    
     // Get user sites and default sites
     const [userSitesResult, defaultSitesResult] = await Promise.all([
       new Promise(resolve => chrome.storage.local.get(['userSites'], resolve)),
@@ -74,10 +78,14 @@ async function checkSiteAccess(url) {
     const userSites = userSitesResult.userSites || [];
     const { DEFAULT_SITES } = defaultSitesResult;
     
+    console.log('User sites:', userSites);
+    console.log('Default sites:', DEFAULT_SITES);
+    
     // Check if URL matches any allowed site
     const hasAccess = userSites.some(site => url.startsWith(site.url)) ||
                      DEFAULT_SITES.some(site => url.startsWith(site.url));
     
+    console.log('Site access result:', hasAccess);
     return hasAccess;
   } catch (error) {
     console.error('Error checking site access:', error);
@@ -85,20 +93,3 @@ async function checkSiteAccess(url) {
   }
 }
 
-// Listen for tab updates to inject content script for user-added sites
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
-    checkSiteAccess(tab.url).then(hasAccess => {
-      if (hasAccess) {
-        // Inject content script if not already injected
-        chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          files: ['content/panel.js']
-        }).catch(error => {
-          // Script might already be injected, ignore error
-          console.log('Content script injection skipped:', error.message);
-        });
-      }
-    });
-  }
-});
