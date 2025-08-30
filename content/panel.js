@@ -415,6 +415,8 @@
           showImageError('Failed to extract images');
         }
       }
+      
+
     } catch (error) {
       console.error('Error in handleTryThisOut:', error);
       showImageError('Failed to process page images');
@@ -602,7 +604,9 @@
     // Add event listener for retry button
     const retryBtn = imageSlot.querySelector('[data-action="retry"]');
     if (retryBtn) {
-      retryBtn.addEventListener('click', handleTryThisOut);
+      retryBtn.addEventListener('click', () => {
+        handleTryThisOut();
+      });
     }
   };
 

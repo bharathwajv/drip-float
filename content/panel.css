@@ -716,45 +716,58 @@
 .dy-try-btn {
   width: auto !important;
   height: auto !important;
-  padding: 1rem 2rem !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  border-radius: 25px !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  border: none !important;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 50%, #e8f5e8 100%) !important;
+  background-size: 200% 200% !important;
+  color: #495057 !important;
+  border: 1px solid #e9ecef !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   margin-bottom: 1rem !important;
+  position: relative !important;
+  overflow: hidden !important;
+  animation: gradientShift 3s ease-in-out infinite !important;
 }
 
 .dy-try-btn::before {
-  content: "✨";
-  font-size: 1.3rem;
+  content: "";
+  width: 20px;
+  height: 20px;
   margin-right: 8px;
   display: inline-block;
+  background-image: url('chrome-extension://__MSG_@@extension_id__/icons/atom.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .dy-try-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+  background: linear-gradient(135deg, #bbdefb 0%, #e1bee7 50%, #c8e6c9 100%) !important;
+  background-size: 200% 200% !important;
+  border-color: #dee2e6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
 
 .dy-try-btn:active {
-  transform: translateY(0) !important;
-  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4) !important;
+  background: #dee2e6 !important;
+  transform: none !important;
 }
 
+
+
 .dy-try-subtext {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #6c757d;
-  opacity: 0.8;
-  line-height: 1.4;
-  max-width: 200px;
+  opacity: 0.7;
+  line-height: 1.3;
+  max-width: 180px;
 }
 
 /* Retry Button Styles */
@@ -764,32 +777,57 @@
   height: auto !important;
   padding: 0.75rem 1.5rem !important;
   font-size: 0.875rem !important;
-  font-weight: 600 !important;
-  border-radius: 20px !important;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-  color: white !important;
-  border: none !important;
-  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3) !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 50%, #e0f2f1 100%) !important;
+  background-size: 200% 200% !important;
+  color: #495057 !important;
+  border: 1px solid #e9ecef !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  animation: gradientShift 3s ease-in-out infinite !important;
 }
 
 .dy-retry-btn::before {
-  content: "✨";
-  font-size: 1.3rem;
+  content: "";
+  width: 16px;
+  height: 16px;
   margin-right: 8px;
   display: inline-block;
+  background-image: url('chrome-extension://__MSG_@@extension_id__/icons/atom.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .dy-retry-btn:hover {
+  background: linear-gradient(135deg, #ffe0b2 0%, #f8bbd9 50%, #b2dfdb 100%) !important;
+  background-size: 200% 200% !important;
+  border-color: #dee2e6 !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
-  background: linear-gradient(135deg, #218838 0%, #1ea085 100%) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
 
 .dy-retry-btn:active {
-  transform: translateY(0) !important;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3) !important;
+  background: #dee2e6 !important;
+  transform: none !important;
 }
+
+/* Gradient animation keyframes */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
