@@ -20,6 +20,7 @@ import { StorageService } from './storageService.js';
     console.log('Initializing popup...');
     await loadPopupSettings();
     await checkOverlayState();
+    await checkCurrentSiteStatus();
     setupEventListeners();
     console.log('Popup initialization complete');
   };
@@ -150,6 +151,66 @@ import { StorageService } from './storageService.js';
       
     } catch (error) {
       console.error('Error adding current site:', error);
+    }
+  };
+
+  // Check current site status and update button
+  const checkCurrentSiteStatus = async () => {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab) return;
+      
+      const currentUrl = tab.url;
+      const userSites = await storageService.getUserSites();
+      const { DEFAULT_SITES } = await import('../config/sites.js');
+      const defaultSiteUrls = DEFAULT_SITES.map(site => site.url);
+      
+      // Check if current site is already in the list
+      const isSiteInList = userSites.some(site => site.url === currentUrl) || 
+                          defaultSiteUrls.some(url => currentUrl.startsWith(url));
+      
+      if (isSiteInList) {
+        // Site is already in list, show remove button
+        addCurrentSiteBtn.innerHTML = '🗑️ Remove Site';
+        addCurrentSiteBtn.classList.add('remove-mode');
+        addCurrentSiteBtn.onclick = removeCurrentSite;
+      } else {
+        // Site is not in list, show add button
+        addCurrentSiteBtn.innerHTML = '🌐 Add Current Site';
+        addCurrentSiteBtn.classList.remove('remove-mode');
+        addCurrentSiteBtn.onclick = addCurrentSite;
+      }
+    } catch (error) {
+      console.error('Error checking current site status:', error);
+    }
+  };
+
+  // Remove current site from supported sites
+  const removeCurrentSite = async () => {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab) return;
+      
+      const currentUrl = tab.url;
+      const userSites = await storageService.getUserSites();
+      
+      // Remove from user sites if it exists there
+      if (userSites.some(site => site.url === currentUrl)) {
+        await storageService.removeUserSite(currentUrl);
+        console.log('Site removed from supported sites!');
+      } else {
+        // If it's a default site, we can't remove it, just show message
+        console.log('This is a default site and cannot be removed');
+        return;
+      }
+      
+      // Update button back to add mode
+      addCurrentSiteBtn.innerHTML = '🌐 Add Current Site';
+      addCurrentSiteBtn.classList.remove('remove-mode');
+      addCurrentSiteBtn.onclick = addCurrentSite;
+      
+    } catch (error) {
+      console.error('Error removing current site:', error);
     }
   };
 

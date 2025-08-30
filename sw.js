@@ -52,4 +52,53 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     });
     return true; // async
   }
+  
+  if (msg?.type === 'CHECK_SITE_ACCESS') {
+    // Check if current site should have access to the overlay
+    checkSiteAccess(sender.tab.url).then(hasAccess => {
+      sendResponse({ ok: true, hasAccess });
+    });
+    return true; // async
+  }
+});
+
+// Check if a site should have access to the overlay
+async function checkSiteAccess(url) {
+  try {
+    // Get user sites and default sites
+    const [userSitesResult, defaultSitesResult] = await Promise.all([
+      new Promise(resolve => chrome.storage.local.get(['userSites'], resolve)),
+      import('./config/sites.js')
+    ]);
+    
+    const userSites = userSitesResult.userSites || [];
+    const { DEFAULT_SITES } = defaultSitesResult;
+    
+    // Check if URL matches any allowed site
+    const hasAccess = userSites.some(site => url.startsWith(site.url)) ||
+                     DEFAULT_SITES.some(site => url.startsWith(site.url));
+    
+    return hasAccess;
+  } catch (error) {
+    console.error('Error checking site access:', error);
+    return false;
+  }
+}
+
+// Listen for tab updates to inject content script for user-added sites
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url) {
+    checkSiteAccess(tab.url).then(hasAccess => {
+      if (hasAccess) {
+        // Inject content script if not already injected
+        chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ['content/panel.js']
+        }).catch(error => {
+          // Script might already be injected, ignore error
+          console.log('Content script injection skipped:', error.message);
+        });
+      }
+    });
+  }
 });
