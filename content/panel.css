@@ -502,48 +502,13 @@
     border-color: #dee2e6;
   }
   
-  /* More Options Bubble - positioned very close to the main overlay */
-  .dy-more-bubble {
+  /* Dropdown Menu - positioned to the right of the panel */
+  .dy-dropdown-menu {
     position: absolute;
-    right: -20px;
+    right: -140px;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid #e9ecef;
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    cursor: pointer;
-    font-size: 14px;
-    line-height: 1;
-    color: #6c757d;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    animation: popIn 0.5s ease 0.8s forwards;
-    z-index: 2147483648;
-  }
-  
-  .dy-more-bubble:hover {
-    border-color: #dee2e6;
-    background: #f8f9fa;
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-  }
-  
-  .dy-more-bubble:active {
-    transform: translateY(-50%) scale(0.95);
-  }
-  
-  /* Menu positioned very close to the overlay */
-  .dy-menu {
-    position: absolute;
-    right: -120px;
-    top: calc(50% - 16px);
-    width: 120px;
+    width: 130px;
     background: #fff;
     border: 1px solid #e6e6e6;
     border-radius: 12px;
@@ -557,15 +522,18 @@
     transform: translateX(20px) scale(0.9);
     pointer-events: none;
     backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
   }
   
-  .dy-menu:not(.dy-hidden) {
+
+  
+  .dy-dropdown-menu:not(.dy-hidden) {
     opacity: 1;
     transform: translateX(0) scale(1);
     pointer-events: auto;
   }
   
-  .dy-menu-item {
+  .dy-dropdown-item {
     all: unset;
     box-sizing: border-box;
     padding: 10px 12px;
@@ -577,7 +545,7 @@
     overflow: hidden;
   }
   
-  .dy-menu-item:hover {
+  .dy-dropdown-item:hover {
     background: #f8f9fa;
     transform: translateX(2px);
   }

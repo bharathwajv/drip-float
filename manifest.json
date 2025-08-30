@@ -68,7 +68,8 @@
         "options/options.js",
         "config/sites.json",
         "config/sites.js",
-        "public/fav_icon_logo.png"
+        "public/fav_icon_logo.png",
+        "icons/*"
       ],
       "matches": [
         "https://*/*",

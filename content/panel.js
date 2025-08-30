@@ -5,8 +5,8 @@
   root.id = 'drip-float-root';
   Object.assign(root.style, {
     position: 'fixed',
-    bottom: '24px',
-    right: '24px',
+    bottom: '40px',
+    right: '100px',
     zIndex: 2147483647,
     width: '400px',
     height: '300px',
@@ -25,10 +25,10 @@
   container.className = 'dy-container';
   container.innerHTML = `
     <div class="dy-header">
-      <button class="dy-resize" aria-label="Resize"><img src="${chrome.runtime.getURL('public/icons/maximize-2.svg')}" alt="Expand" width="16" height="16"></button>
+      <button class="dy-resize" aria-label="Resize"><img src="${chrome.runtime.getURL('icons/maximize-2.svg')}" alt="Expand" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⤡</span></button>
       <div class="dy-drag-handle" title="Drag to move"></div>
-      <button class="dy-minimize" aria-label="Minimize"><img src="${chrome.runtime.getURL('public/icons/minimize-2.svg')}" alt="Minimize" width="16" height="16"></button>
-      <button class="dy-close" aria-label="Close"><img src="${chrome.runtime.getURL('public/icons/circle-x.svg')}" alt="Close" width="16" height="16"></button>
+      <button class="dy-minimize" aria-label="Minimize"><img src="${chrome.runtime.getURL('icons/minus.svg')}" alt="Minimize" width="18" height="18" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">−</span></button>
+      <button class="dy-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/x.svg')}" alt="Close" width="18" height="18" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
     </div>
     <div class="dy-body">
       <div class="dy-image-slot" aria-label="Image view">
@@ -38,8 +38,9 @@
         </div>
       </div>
       <div class="dy-side-buttons">
-        <button class="dy-btn" data-action="extract" title="Open Full Screen"><img src="${chrome.runtime.getURL('public/icons/maximize-2.svg')}" alt="Open Full Screen" width="16" height="16"></button>
-        <button class="dy-btn" data-action="generate" title="Download"><img src="${chrome.runtime.getURL('public/icons/download.svg')}" alt="Download" width="16" height="16"></button>
+        <button class="dy-btn" data-action="more" title="More Options"><img src="${chrome.runtime.getURL('icons/text-align-justify.svg')}" alt="More Options" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⋯</span></button>
+        <button class="dy-btn" data-action="extract" title="Open Full Screen"><img src="${chrome.runtime.getURL('icons/square-arrow-out-up-right.svg')}" alt="Open Full Screen" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">↗</span></button>
+        <button class="dy-btn" data-action="generate" title="Download"><img src="${chrome.runtime.getURL('icons/download.svg')}" alt="Download" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⬇</span></button>
       </div>
     </div>
   `;
@@ -48,8 +49,8 @@
   const minimizedBubble = document.createElement('div');
   minimizedBubble.className = 'dy-minimized-bubble dy-hidden';
   minimizedBubble.innerHTML = `
-    <button class="dy-bubble-close" aria-label="Close"><img src="${chrome.runtime.getURL('public/icons/circle-x.svg')}" alt="Close" width="14" height="14"></button>
-    <button class="dy-bubble-move" aria-label="Move"><img src="${chrome.runtime.getURL('public/icons/maximize-2.svg')}" alt="Move" width="14" height="14"></button>
+    <button class="dy-bubble-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/x.svg')}" alt="Close" width="14" height="14" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
+    <button class="dy-bubble-move" aria-label="Move"><img src="${chrome.runtime.getURL('icons/maximize-2.svg')}" alt="Move" width="14" height="14" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⤡</span></button>
     <div class="dy-bubble-content">
       <img src="${chrome.runtime.getURL('public/fav_icon_logo.png')}" alt="DripFloat" class="dy-bubble-logo" />
     </div>
@@ -65,27 +66,23 @@
     </div>
   `;
 
-  // "More options" bubble
-  const moreBubble = document.createElement('button');
-  moreBubble.className = 'dy-more-bubble';
-  moreBubble.innerHTML = '⋯<br><span style="font-size: 10px; line-height: 1;">More</span>';
-  moreBubble.title = 'More options';
 
-  // Menu that appears when the "more" bubble is clicked
-  const menu = document.createElement('div');
-  menu.className = 'dy-menu dy-hidden';
-  menu.innerHTML = `
-    <button class="dy-menu-item" data-menu="history">History</button>
-    <button class="dy-menu-item" data-menu="open-full">Open Full Page</button>
-    <button class="dy-menu-item" data-menu="extract-images">Extract Images</button>
-  `;
 
   // Append elements to the shadow DOM
   shadow.appendChild(container);
   shadow.appendChild(minimizedBubble);
   shadow.appendChild(dismissArea);
-  shadow.appendChild(moreBubble);
-  shadow.appendChild(menu);
+  
+  // Add dropdown menu for more options
+  const dropdownMenu = document.createElement('div');
+  dropdownMenu.className = 'dy-dropdown-menu dy-hidden';
+  dropdownMenu.innerHTML = `
+    <button class="dy-dropdown-item" data-menu="history">History</button>
+    <button class="dy-dropdown-item" data-menu="open-full">Open Full Page</button>
+    <button class="dy-dropdown-item" data-menu="extract-images">Extract Images</button>
+  `;
+  shadow.appendChild(dropdownMenu);
+  
   document.documentElement.appendChild(root);
 
   // Initialize image extractor
@@ -371,6 +368,39 @@
     }
   };
 
+  // Dropdown menu functionality
+  const toggleDropdownMenu = () => {
+    const dropdown = shadow.querySelector('.dy-dropdown-menu');
+    dropdown.classList.toggle('dy-hidden');
+  };
+
+  // Handle dropdown menu item clicks
+  shadow.addEventListener('click', (e) => {
+    const menuItem = e.target.closest('.dy-dropdown-item');
+    if (!menuItem) return;
+    
+    const menuAction = menuItem.dataset.menu;
+    if (menuAction === 'history' || menuAction === 'open-full') {
+      chrome.runtime.sendMessage({ type: 'OPEN_HISTORY_TAB' });
+    } else if (menuAction === 'extract-images') {
+      extractAndDisplayImages();
+    }
+    
+    // Hide dropdown after selection
+    const dropdown = shadow.querySelector('.dy-dropdown-menu');
+    dropdown.classList.add('dy-hidden');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!root.contains(e.target)) {
+      const dropdown = shadow.querySelector('.dy-dropdown-menu');
+      if (dropdown && !dropdown.classList.contains('dy-hidden')) {
+        dropdown.classList.add('dy-hidden');
+      }
+    }
+  });
+
   // Load saved dimensions from storage
   const loadSavedDimensions = () => {
     chrome.storage.local.get(['panelWidth', 'panelHeight'], (result) => {
@@ -434,7 +464,7 @@
     
     // Update resize button icon
     const resizeBtn = container.querySelector('.dy-resize');
-    resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('public/icons/list-collapse.svg') + '" alt="Collapse" width="16" height="16">';
+    resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('icons/minimize-2.svg') + '" alt="Collapse" width="16" height="16" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'inline\';"><span style="display:none;">⤢</span>';
     resizeBtn.title = 'Collapse';
     
     // Remove transition after animation
@@ -463,7 +493,7 @@
     
     // Update resize button icon
     const resizeBtn = container.querySelector('.dy-resize');
-    resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('public/icons/maximize-2.svg') + '" alt="Expand" width="16" height="16">';
+    resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('icons/maximize-2.svg') + '" alt="Expand" width="16" height="16" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'inline\';"><span style="display:none;">⤡</span>';
     resizeBtn.title = 'Expand';
     
     // Remove transition after animation
@@ -478,8 +508,6 @@
   const minimizePanel = () => {
     isMinimized = true;
     container.classList.add('dy-hidden');
-    moreBubble.classList.add('dy-hidden');
-    menu.classList.add('dy-hidden');
     minimizedBubble.classList.remove('dy-hidden');
     
     // Load saved bubble position or use default
@@ -492,7 +520,6 @@
   const restorePanel = () => {
     isMinimized = false;
     container.classList.remove('dy-hidden');
-    moreBubble.classList.remove('dy-hidden');
     minimizedBubble.classList.add('dy-hidden');
     
     // Store restored state
@@ -520,9 +547,8 @@
         target.closest('.dy-btn') || 
         target.closest('.dy-image-slot') ||
         target.closest('.dy-nav-btn') ||
-        target.closest('.dy-more-bubble') ||
-        target.closest('.dy-menu') ||
-        target.closest('.dy-menu-item') ||
+        target.closest('.dy-dropdown-menu') ||
+        target.closest('.dy-dropdown-item') ||
         target.closest('.dy-resize') ||
         target.closest('.dy-minimize')) {
       return;
@@ -785,7 +811,10 @@
   // Side button actions
   container.addEventListener('click', (e) => {
     const action = e.target.closest('.dy-btn')?.dataset.action;
-    if (action === 'extract') {
+    if (action === 'more') {
+      // Toggle dropdown menu
+      toggleDropdownMenu();
+    } else if (action === 'extract') {
       // Open full screen
       chrome.runtime.sendMessage({ type: 'OPEN_HISTORY_TAB' });
     } else if (action === 'generate') {
@@ -798,23 +827,7 @@
     }
   });
 
-  moreBubble.addEventListener('click', () => {
-    menu.classList.toggle('dy-hidden');
-  });
 
-  menu.addEventListener('click', (e) => {
-    const item = e.target.closest('.dy-menu-item');
-    if (!item) return;
-    
-    const menuAction = item.dataset.menu;
-    if (menuAction === 'history' || menuAction === 'open-full') {
-      chrome.runtime.sendMessage({ type: 'OPEN_HISTORY_TAB' });
-    } else if (menuAction === 'extract-images') {
-      extractAndDisplayImages();
-    }
-    
-    menu.classList.add('dy-hidden'); // Hide menu after click
-  });
   
   // Function to show/hide overlay
   const toggleOverlay = (visible) => {
