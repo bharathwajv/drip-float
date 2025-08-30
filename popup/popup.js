@@ -22,6 +22,7 @@ import { StorageService } from './storageService.js';
     await checkOverlayState();
     await checkCurrentSiteStatus();
     setupEventListeners();
+    setupStorageListener(); // Setup storage listener
     console.log('Popup initialization complete');
   };
 
@@ -74,8 +75,30 @@ import { StorageService } from './storageService.js';
     addCurrentSiteBtn.addEventListener('click', addCurrentSite);
   };
 
+  // Setup storage listener for real-time updates
+  const setupStorageListener = () => {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'local') {
+        if (changes.customSites || changes.removedDefaultSites) {
+          console.log('Sites changed, updating popup...');
+          checkCurrentSiteStatus();
+        }
+        if (changes.overlayVisible !== undefined) {
+          console.log('Overlay visibility changed, updating popup...');
+          checkOverlayState();
+        }
+      }
+    });
 
-
+    // Listen for messages from options page
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'SITES_CHANGED') {
+        console.log('Received sites changed message, updating popup...');
+        checkCurrentSiteStatus();
+        sendResponse({ ok: true });
+      }
+    });
+  };
 
 
   // Toggle overlay
@@ -119,25 +142,41 @@ import { StorageService } from './storageService.js';
       const userSites = await storageService.getUserSites();
       
       // Check if site already exists (either in user sites or default sites)
-      // Import default sites from centralized config
       const { DEFAULT_SITES } = await import('../config/sites.js');
       const defaultSiteUrls = DEFAULT_SITES.map(site => site.url);
       
-      if (userSites.some(site => site.url === currentUrl) || 
-          defaultSiteUrls.some(url => currentUrl.startsWith(url))) {
+      // Get removed default sites
+      const result = await chrome.storage.local.get(['removedDefaultSites']);
+      const removedDefaultSites = result.removedDefaultSites || [];
+      
+      const isAlreadyInList = userSites.some(site => site.url === currentUrl) || 
+          defaultSiteUrls.some(url => {
+            const matchesPattern = currentUrl.startsWith(url);
+            const isRemoved = removedDefaultSites.includes(url);
+            return matchesPattern && !isRemoved;
+          });
+      
+      if (isAlreadyInList) {
         console.log('This site is already in your supported sites list');
         return;
       }
       
-      // Add the new site
-      const newSite = {
-        url: currentUrl,
-        name: siteName,
-        icon: siteIcon
-      };
-      
-      await storageService.addUserSite(newSite);
-      console.log(`${siteName} added to supported sites!`);
+      // If it was previously removed from default sites, remove it from removed list
+      if (removedDefaultSites.includes(currentUrl)) {
+        const updatedRemovedSites = removedDefaultSites.filter(site => site !== currentUrl);
+        await chrome.storage.local.set({ removedDefaultSites: updatedRemovedSites });
+        console.log('Site restored to default supported sites!');
+      } else {
+        // Add the new site to user sites
+        const newSite = {
+          url: currentUrl,
+          name: siteName,
+          icon: siteIcon
+        };
+        
+        await storageService.addUserSite(newSite);
+        console.log(`${siteName} added to supported sites!`);
+      }
       
       // Update the button text temporarily
       const originalText = addCurrentSiteBtn.innerHTML;
@@ -147,6 +186,8 @@ import { StorageService } from './storageService.js';
       setTimeout(() => {
         addCurrentSiteBtn.innerHTML = originalText;
         addCurrentSiteBtn.disabled = false;
+        // Re-check status to update button state
+        checkCurrentSiteStatus();
       }, 2000);
       
     } catch (error) {
@@ -162,18 +203,36 @@ import { StorageService } from './storageService.js';
       
       const currentUrl = tab.url;
       const userSites = await storageService.getUserSites();
+      
+      // Get default sites and removed default sites
       const { DEFAULT_SITES } = await import('../config/sites.js');
       const defaultSiteUrls = DEFAULT_SITES.map(site => site.url);
       
+      // Get removed default sites
+      const result = await chrome.storage.local.get(['removedDefaultSites']);
+      const removedDefaultSites = result.removedDefaultSites || [];
+      
       // Check if current site is already in the list
       const isSiteInList = userSites.some(site => site.url === currentUrl) || 
-                          defaultSiteUrls.some(url => currentUrl.startsWith(url));
+                          defaultSiteUrls.some(url => {
+                            // Check if current URL matches default site pattern and is not removed
+                            const matchesPattern = currentUrl.startsWith(url);
+                            const isRemoved = removedDefaultSites.includes(url);
+                            return matchesPattern && !isRemoved;
+                          });
+      
+      const siteStatusText = document.getElementById('siteStatusText');
       
       if (isSiteInList) {
         // Site is already in list, show remove button
         addCurrentSiteBtn.innerHTML = '🗑️ Remove Site';
         addCurrentSiteBtn.classList.add('remove-mode');
         addCurrentSiteBtn.onclick = removeCurrentSite;
+        
+        // Hide the descriptive text
+        if (siteStatusText) {
+          siteStatusText.textContent = 'remove this page from supported sites list';
+        }
       } else {
         // Site is not in list, show add button
         addCurrentSiteBtn.innerHTML = '🌐 Add Current Site';
@@ -194,14 +253,27 @@ import { StorageService } from './storageService.js';
       const currentUrl = tab.url;
       const userSites = await storageService.getUserSites();
       
-      // Remove from user sites if it exists there
-      if (userSites.some(site => site.url === currentUrl)) {
-        await storageService.removeUserSite(currentUrl);
-        console.log('Site removed from supported sites!');
+      // Check if it's a default site
+      const { DEFAULT_SITES } = await import('../config/sites.js');
+      const defaultSiteUrls = DEFAULT_SITES.map(site => site.url);
+      const isDefaultSite = defaultSiteUrls.some(url => currentUrl.startsWith(url));
+      
+      if (isDefaultSite) {
+        // Remove from default sites by adding to removed list
+        const result = await chrome.storage.local.get(['removedDefaultSites']);
+        const removedSites = result.removedDefaultSites || [];
+        
+        if (!removedSites.includes(currentUrl)) {
+          removedSites.push(currentUrl);
+          await chrome.storage.local.set({ removedDefaultSites: removedSites });
+          console.log('Default site removed from supported sites!');
+        }
       } else {
-        // If it's a default site, we can't remove it, just show message
-        console.log('This is a default site and cannot be removed');
-        return;
+        // Remove from user sites if it exists there
+        if (userSites.some(site => site.url === currentUrl)) {
+          await storageService.removeUserSite(currentUrl);
+          console.log('Site removed from supported sites!');
+        }
       }
       
       // Update button back to add mode

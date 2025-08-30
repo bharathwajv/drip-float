@@ -20,26 +20,63 @@
     .header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 20px;
+      padding: 24px 20px;
       text-align: center;
-      border-radius: 0 0 16px 16px;
+      border-radius: 0 0 20px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      pointer-events: none;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .logo-image {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
     }
 
     .header h1 {
       margin: 0 0 8px 0;
-      font-size: 24px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      letter-spacing: -0.5px;
     }
 
     .header p {
       margin: 0;
-      opacity: 0.9;
-      font-size: 14px;
+      opacity: 0.95;
+      font-size: 15px;
+      font-weight: 400;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .content {
       padding: 20px;
-      height: calc(100% - 120px);
+      height: calc(100% - 140px);
       overflow-y: auto;
     }
 
@@ -147,8 +184,13 @@
 </head>
 <body>
   <div class="header">
-    <h1>Drip Float</h1>
-    <p>AI Fashion Collaboration Platform</p>
+    <div class="logo-container">
+      <img src="../public/full_logo.png" alt="Drip Float Logo" class="logo-image">
+    </div>
+    <div class="header-content">
+      <h1>Drip Float</h1>
+      <p>AI Fashion Collaboration Platform</p>
+    </div>
   </div>
 
   <div class="content">
@@ -173,7 +215,7 @@
         <button class="btn btn-secondary" id="addCurrentSiteBtn" style="width: 100%; margin-bottom: 0;">
           🌐 Add Current Site
         </button>
-        <div style="font-size: 12px; color: #6c757d; text-align: center; margin-top: 8px;">
+        <div id="siteStatusText" style="font-size: 12px; color: #6c757d; text-align: center; margin-top: 8px;">
           Add this page to your supported sites list
         </div>
       </div>

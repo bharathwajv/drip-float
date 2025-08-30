@@ -67,11 +67,13 @@ class DripFloatOptions {
 
   async loadUserSites() {
     try {
-      const result = await chrome.storage.local.get(['customSites']);
+      const result = await chrome.storage.local.get(['customSites', 'removedDefaultSites']);
       this.customSites = result.customSites || [];
+      this.removedDefaultSites = result.removedDefaultSites || [];
     } catch (error) {
       console.error('Error loading user sites:', error);
       this.customSites = [];
+      this.removedDefaultSites = [];
     }
   }
 
@@ -96,12 +98,18 @@ class DripFloatOptions {
 
   renderSites() {
     const sitesList = document.getElementById('sitesList');
+    const removedSitesList = document.getElementById('removedSitesList');
+    const removedSitesCard = document.getElementById('removedSitesCard');
+    
     sitesList.innerHTML = '';
+    removedSitesList.innerHTML = '';
 
-    // Render default sites
+    // Render default sites (excluding removed ones)
     this.defaultSites.forEach(site => {
-      const siteItem = this.createSiteItem(site, this.siteNames[site] || site, true);
-      sitesList.appendChild(siteItem);
+      if (!this.removedDefaultSites.includes(site)) {
+        const siteItem = this.createSiteItem(site, this.siteNames[site] || site, true);
+        sitesList.appendChild(siteItem);
+      }
     });
 
     // Render custom sites
@@ -109,6 +117,17 @@ class DripFloatOptions {
       const siteItem = this.createSiteItem(site, this.getSiteName(site), false);
       sitesList.appendChild(siteItem);
     });
+
+    // Render removed default sites
+    if (this.removedDefaultSites.length > 0) {
+      removedSitesCard.style.display = 'block';
+      this.removedDefaultSites.forEach(site => {
+        const siteItem = this.createRemovedSiteItem(site, this.siteNames[site] || site);
+        removedSitesList.appendChild(siteItem);
+      });
+    } else {
+      removedSitesCard.style.display = 'none';
+    }
   }
 
   createSiteItem(url, name, isDefault) {
@@ -124,18 +143,45 @@ class DripFloatOptions {
         <div class="site-details">
           <h4>${name}</h4>
           <p>${url}</p>
+          ${isDefault ? '<span style="color: #6c757d; font-size: 12px;">(Default)</span>' : ''}
         </div>
       </div>
       <div class="site-actions">
-        ${!isDefault ? `<button class="btn-small danger remove-site" data-url="${url}" title="Remove site">🗑️</button>` : ''}
+        <button class="btn-small danger remove-site" data-url="${url}" data-default="${isDefault}" title="Remove site">🗑️</button>
       </div>
     `;
 
-    // Add remove event listener for custom sites
-    if (!isDefault) {
-      const removeBtn = siteItem.querySelector('.remove-site');
-      removeBtn.addEventListener('click', () => this.removeCustomSite(url));
-    }
+    // Add remove event listener for all sites (both default and custom)
+    const removeBtn = siteItem.querySelector('.remove-site');
+    removeBtn.addEventListener('click', () => this.removeSite(url, isDefault));
+
+    return siteItem;
+  }
+
+  createRemovedSiteItem(url, name) {
+    const siteItem = document.createElement('div');
+    siteItem.className = 'site-item';
+    
+    const domain = this.extractDomain(url);
+    const icon = domain.charAt(0).toUpperCase();
+    
+    siteItem.innerHTML = `
+      <div class="site-info">
+        <div class="site-icon" style="background: #6c757d;">${icon}</div>
+        <div class="site-details">
+          <h4>${name}</h4>
+          <p>${url}</p>
+          <span style="color: #dc3545; font-size: 12px;">(Removed)</span>
+        </div>
+      </div>
+      <div class="site-actions">
+        <button class="btn-small restore-site" data-url="${url}" title="Restore site">🔄</button>
+      </div>
+    `;
+
+    // Add restore event listener
+    const restoreBtn = siteItem.querySelector('.restore-site');
+    restoreBtn.addEventListener('click', () => this.restoreDefaultSite(url));
 
     return siteItem;
   }
@@ -182,10 +228,41 @@ class DripFloatOptions {
     
     input.value = '';
     this.showStatus('Site added successfully!', 'success');
+    
+    // Notify popup and content scripts about the change
+    this.notifySiteChange();
   }
 
   isValidUrl(url) {
     return url.startsWith('https://') || url.startsWith('http://');
+  }
+
+  async removeSite(url, isDefault) {
+    if (isDefault) {
+      // For default sites, add to a "removed" list in storage
+      try {
+        const result = await chrome.storage.local.get(['removedDefaultSites']);
+        const removedSites = result.removedDefaultSites || [];
+        
+        if (!removedSites.includes(url)) {
+          removedSites.push(url);
+          await chrome.storage.local.set({ removedDefaultSites: removedSites });
+          this.showStatus('Default site removed successfully!', 'success');
+        }
+      } catch (error) {
+        console.error('Error removing default site:', error);
+        this.showStatus('Failed to remove default site', 'error');
+      }
+    } else {
+      // For custom sites, remove from customSites array
+      await this.removeCustomSite(url);
+    }
+    
+    // Re-render to reflect changes
+    this.renderSites();
+    
+    // Notify popup and content scripts about the change
+    this.notifySiteChange();
   }
 
   async removeCustomSite(url) {
@@ -193,8 +270,10 @@ class DripFloatOptions {
     if (index > -1) {
       this.customSites.splice(index, 1);
       await this.saveCustomSites();
-      this.renderSites();
       this.showStatus('Site removed successfully!', 'success');
+      
+      // Notify popup and content scripts about the change
+      this.notifySiteChange();
     }
   }
 
@@ -250,6 +329,22 @@ class DripFloatOptions {
     }
   }
 
+  async restoreDefaultSite(url) {
+    try {
+      const index = this.removedDefaultSites.indexOf(url);
+      if (index > -1) {
+        this.removedDefaultSites.splice(index, 1);
+        await chrome.storage.local.set({ removedDefaultSites: this.removedDefaultSites });
+        this.showStatus('Default site restored successfully!', 'success');
+        this.renderSites();
+        this.notifySiteChange();
+      }
+    } catch (error) {
+      console.error('Error restoring default site:', error);
+      this.showStatus('Failed to restore default site', 'error');
+    }
+  }
+
   showStatus(message, type = 'success') {
     const statusDiv = document.getElementById('statusMessage');
     statusDiv.textContent = message;
@@ -260,6 +355,25 @@ class DripFloatOptions {
     setTimeout(() => {
       statusDiv.style.display = 'none';
     }, 3000);
+  }
+
+  // Notify other parts of the extension about site changes
+  async notifySiteChange() {
+    try {
+      // Update popup if it's open
+      const tabs = await chrome.tabs.query({});
+      tabs.forEach(tab => {
+        try {
+          chrome.tabs.sendMessage(tab.id, { 
+            type: 'SITES_CHANGED'
+          });
+        } catch (e) {
+          // Tab might not have content script loaded
+        }
+      });
+    } catch (error) {
+      console.error('Error notifying about site changes:', error);
+    }
   }
 }
 

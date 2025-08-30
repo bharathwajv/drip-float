@@ -69,21 +69,27 @@ async function checkSiteAccess(url) {
   try {
     console.log('Checking site access for:', url);
     
-    // Get user sites and default sites
-    const [userSitesResult, defaultSitesResult] = await Promise.all([
+    // Get user sites, default sites, and removed default sites
+    const [userSitesResult, defaultSitesResult, removedSitesResult] = await Promise.all([
       new Promise(resolve => chrome.storage.local.get(['userSites'], resolve)),
-      import('./config/sites.js')
+      import('./config/sites.js'),
+      new Promise(resolve => chrome.storage.local.get(['removedDefaultSites'], resolve))
     ]);
     
     const userSites = userSitesResult.userSites || [];
     const { DEFAULT_SITES } = defaultSitesResult;
+    const removedDefaultSites = removedSitesResult.removedDefaultSites || [];
     
     console.log('User sites:', userSites);
     console.log('Default sites:', DEFAULT_SITES);
+    console.log('Removed default sites:', removedDefaultSites);
     
-    // Check if URL matches any allowed site
+    // Check if URL matches any allowed site (excluding removed default sites)
     const hasAccess = userSites.some(site => url.startsWith(site.url)) ||
-                     DEFAULT_SITES.some(site => url.startsWith(site.url));
+                     DEFAULT_SITES.some(site => {
+                       const isRemoved = removedDefaultSites.includes(site.url);
+                       return !isRemoved && url.startsWith(site.url);
+                     });
     
     console.log('Site access result:', hasAccess);
     return hasAccess;

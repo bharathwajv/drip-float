@@ -198,6 +198,17 @@
         color: #dc3545;
       }
       
+      .btn-small.restore-site {
+        background: #28a745;
+        color: white;
+        border-color: #28a745;
+      }
+      
+      .btn-small.restore-site:hover {
+        background: #218838;
+        border-color: #1e7e34;
+      }
+      
       .add-site-form {
         display: flex;
         gap: 12px;
@@ -303,6 +314,19 @@
           <div class="add-site-form">
             <input type="url" id="newSiteUrl" placeholder="Enter site URL (e.g., https://example.com)" />
             <button id="addSiteBtn">Add Site</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="option-card" id="removedSitesCard" style="display: none;">
+        <h3>Removed Default Sites</h3>
+        <div class="toggle-description">
+          These default sites have been removed. You can restore them if needed.
+        </div>
+        
+        <div class="sites-section">
+          <div class="sites-list" id="removedSitesList">
+            <!-- Removed sites will be populated here -->
           </div>
         </div>
       </div>

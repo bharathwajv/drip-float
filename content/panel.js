@@ -57,7 +57,7 @@
     const minimizedBubble = document.createElement('div');
     minimizedBubble.className = 'dy-minimized-bubble dy-hidden';
     minimizedBubble.innerHTML = `
-      <button class="dy-bubble-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/circle-x.svg')}" alt="Close" width="14" height="14" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
+      <button class="dy-bubble-close" aria-label="Close"><img src="${chrome.runtime.getURL('icons/circle-x.svg')}" alt="Close" width="18" height="18" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">✕</span></button>
       <div class="dy-bubble-content">
         <img src="${chrome.runtime.getURL('public/fav_icon_logo.png')}" alt="DripFloat" class="dy-bubble-logo" />
       </div>
@@ -75,6 +75,54 @@
       <button class="dy-dropdown-item" data-menu="open-full">Open Full Page</button>
       <button class="dy-dropdown-item" data-menu="extract-images">Extract Images</button>
     `;
+    
+    // Add CSS styling for the dropdown menu
+    const dropdownStyle = document.createElement('style');
+    dropdownStyle.textContent = `
+      .dy-dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 8px 0;
+        min-width: 160px;
+        z-index: 1000;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      
+      .dy-dropdown-menu.dy-hidden {
+        display: none;
+      }
+      
+      .dy-dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 8px 16px;
+        border: none;
+        background: none;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        font-family: inherit;
+      }
+      
+      .dy-dropdown-item:hover {
+        background-color: #f8f9fa;
+        color: #007bff;
+      }
+      
+      .dy-dropdown-item:active {
+        background-color: #e9ecef;
+      }
+    `;
+    
+    shadow.appendChild(dropdownStyle);
     shadow.appendChild(dropdownMenu);
     
     document.documentElement.appendChild(root);
@@ -670,8 +718,8 @@
         minimizedBubble.style.right = 'auto';
         minimizedBubble.style.bottom = 'auto';
       } else {
-        console.log('No saved bubble position found, using default');
-        // Set default position if none saved
+        console.log('No saved bubble position found, using default bottom-right');
+        // Set default position to bottom-right if none saved
         minimizedBubble.style.left = 'auto';
         minimizedBubble.style.top = 'auto';
         minimizedBubble.style.right = '24px';
@@ -753,6 +801,18 @@
       if (message.type === 'TOGGLE_OVERLAY') {
         toggleOverlay(message.visible);
         sendResponse({ ok: true });
+      } else if (message.type === 'SITES_CHANGED') {
+        // Re-check site support when sites change
+        checkIfSiteSupported().then(isSupported => {
+          if (!isSupported) {
+            // Show overlay on non-supported sites
+            toggleOverlay(true);
+          } else {
+            // Hide overlay on supported sites
+            toggleOverlay(false);
+          }
+        });
+        sendResponse({ ok: true });
       }
     });
     
@@ -761,10 +821,11 @@
       if (res?.ok) {
         // Check if current site is supported before showing overlay
         const isSiteSupported = await checkIfSiteSupported();
-        if (isSiteSupported) {
+        if (!isSiteSupported) {
+          // Show overlay on non-supported sites
           toggleOverlay(res.visible);
         } else {
-          console.log('Current site is not supported, overlay will not be shown');
+          console.log('Current site is supported, overlay will not be shown');
         }
       }
     });
@@ -795,8 +856,16 @@
           ];
         }
         
-        // Check if current hostname is in default sites
-        if (defaultSites.some(site => hostname.includes(site))) {
+        // Check if current hostname is in default sites (excluding removed ones)
+        const result = await chrome.storage.local.get(['removedDefaultSites']);
+        const removedDefaultSites = result.removedDefaultSites || [];
+        
+        const isInDefaultSites = defaultSites.some(site => {
+          const sitePattern = site.replace('/*', '');
+          return hostname.includes(sitePattern) && !removedDefaultSites.includes(site);
+        });
+        
+        if (isInDefaultSites) {
           return true;
         }
         
