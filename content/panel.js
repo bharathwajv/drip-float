@@ -8,8 +8,8 @@
     bottom: '24px',
     right: '24px',
     zIndex: 2147483647,
-    width: '300px',
-    height: '180px',
+    width: '400px',
+    height: '300px',
     transition: 'width 0.3s ease, height 0.3s ease',
   });
   const shadow = root.attachShadow({ mode: 'open' });
@@ -25,10 +25,10 @@
   container.className = 'dy-container';
   container.innerHTML = `
     <div class="dy-header">
-      <button class="dy-resize" aria-label="Resize">⤡</button>
+      <button class="dy-resize" aria-label="Resize"><img src="${chrome.runtime.getURL('public/icons/maximize-2.svg')}" alt="Expand" width="16" height="16"></button>
       <div class="dy-drag-handle" title="Drag to move"></div>
-      <button class="dy-minimize" aria-label="Minimize">−</button>
-      <button class="dy-close" aria-label="Close">✕</button>
+      <button class="dy-minimize" aria-label="Minimize"><img src="${chrome.runtime.getURL('public/icons/minimize-2.svg')}" alt="Minimize" width="16" height="16"></button>
+      <button class="dy-close" aria-label="Close"><img src="${chrome.runtime.getURL('public/icons/circle-x.svg')}" alt="Close" width="16" height="16"></button>
     </div>
     <div class="dy-body">
       <div class="dy-image-slot" aria-label="Image view">
@@ -38,8 +38,8 @@
         </div>
       </div>
       <div class="dy-side-buttons">
-        <button class="dy-btn" data-action="extract" title="Open Full Screen">↗</button>
-        <button class="dy-btn" data-action="generate" title="Download">⬇</button>
+        <button class="dy-btn" data-action="extract" title="Open Full Screen"><img src="${chrome.runtime.getURL('public/icons/maximize-2.svg')}" alt="Open Full Screen" width="16" height="16"></button>
+        <button class="dy-btn" data-action="generate" title="Download"><img src="${chrome.runtime.getURL('public/icons/download.svg')}" alt="Download" width="16" height="16"></button>
       </div>
     </div>
   `;
@@ -48,8 +48,8 @@
   const minimizedBubble = document.createElement('div');
   minimizedBubble.className = 'dy-minimized-bubble dy-hidden';
   minimizedBubble.innerHTML = `
-    <button class="dy-bubble-close" aria-label="Close">✕</button>
-    <button class="dy-bubble-move" aria-label="Move">⤡</button>
+    <button class="dy-bubble-close" aria-label="Close"><img src="${chrome.runtime.getURL('public/icons/circle-x.svg')}" alt="Close" width="14" height="14"></button>
+    <button class="dy-bubble-move" aria-label="Move"><img src="${chrome.runtime.getURL('public/icons/maximize-2.svg')}" alt="Move" width="14" height="14"></button>
     <div class="dy-bubble-content">
       <img src="${chrome.runtime.getURL('public/fav_icon_logo.png')}" alt="DripFloat" class="dy-bubble-logo" />
     </div>
@@ -68,7 +68,7 @@
   // "More options" bubble
   const moreBubble = document.createElement('button');
   moreBubble.className = 'dy-more-bubble';
-  moreBubble.textContent = '⋯';
+  moreBubble.innerHTML = '⋯<br><span style="font-size: 10px; line-height: 1;">More</span>';
   moreBubble.title = 'More options';
 
   // Menu that appears when the "more" bubble is clicked
@@ -94,8 +94,8 @@
   let currentImageIndex = 0;
   let isMinimized = false;
   let isExpanded = false;
-  let originalWidth = 300;
-  let originalHeight = 180;
+  let originalWidth = 0;
+  let originalHeight = 0;
   let expandedWidth = 0;
   let expandedHeight = 0;
   let bubbleDragging = false;
@@ -379,6 +379,12 @@
         originalHeight = result.panelHeight;
         root.style.width = `${originalWidth}px`;
         root.style.height = `${originalHeight}px`;
+      } else {
+        // Set default dimensions if none saved
+        originalWidth = 400;
+        originalHeight = 300;
+        root.style.width = `${originalWidth}px`;
+        root.style.height = `${originalHeight}px`;
       }
     });
   };
@@ -403,48 +409,68 @@
   };
 
   const expandPanel = () => {
-    // Calculate 1/4 of browser size
-    expandedWidth = Math.floor(window.innerWidth * 0.25);
-    expandedHeight = Math.floor(window.innerHeight * 0.25);
+    // Calculate 1/2 of browser size for expanded state
+    expandedWidth = Math.floor(window.innerWidth * 0.5);
+    expandedHeight = Math.floor(window.innerHeight * 0.5);
     
     // Ensure minimum size
-    expandedWidth = Math.max(400, expandedWidth);
-    expandedHeight = Math.max(300, expandedHeight);
+    expandedWidth = Math.max(600, expandedWidth);
+    expandedHeight = Math.max(450, expandedHeight);
     
-    // Animate expansion
+    console.log('Expanding panel to:', expandedWidth, 'x', expandedHeight);
+    
+    // Animate expansion - update both root and container
     root.style.transition = 'width 0.3s ease, height 0.3s ease';
+    container.style.transition = 'width 0.3s ease, height 0.3s ease';
+    
     root.style.width = `${expandedWidth}px`;
     root.style.height = `${expandedHeight}px`;
+    
+    // Also update container dimensions to match
+    container.style.width = '100%';
+    container.style.height = '100%';
     
     isExpanded = true;
     
     // Update resize button icon
     const resizeBtn = container.querySelector('.dy-resize');
-    resizeBtn.innerHTML = '⤢';
+    resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('public/icons/list-collapse.svg') + '" alt="Collapse" width="16" height="16">';
     resizeBtn.title = 'Collapse';
     
     // Remove transition after animation
     setTimeout(() => {
       root.style.transition = '';
+      container.style.transition = '';
+      console.log('Panel expanded, final size:', root.style.width, 'x', root.style.height);
     }, 300);
   };
 
   const collapsePanel = () => {
-    // Animate collapse
+    console.log('Collapsing panel to:', originalWidth, 'x', originalHeight);
+    
+    // Animate collapse - update both root and container
     root.style.transition = 'width 0.3s ease, height 0.3s ease';
+    container.style.transition = 'width 0.3s ease, height 0.3s ease';
+    
     root.style.width = `${originalWidth}px`;
     root.style.height = `${originalHeight}px`;
+    
+    // Reset container dimensions to original
+    container.style.width = '100%';
+    container.style.height = '100%';
     
     isExpanded = false;
     
     // Update resize button icon
     const resizeBtn = container.querySelector('.dy-resize');
-    resizeBtn.innerHTML = '⤡';
+    resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('public/icons/maximize-2.svg') + '" alt="Expand" width="16" height="16">';
     resizeBtn.title = 'Expand';
     
     // Remove transition after animation
     setTimeout(() => {
       root.style.transition = '';
+      container.style.transition = '';
+      console.log('Panel collapsed, final size:', root.style.width, 'x', root.style.height);
     }, 300);
   };
 
@@ -879,8 +905,8 @@
   loadBubblePosition();
   
   // Initialize original dimensions
-  originalWidth = parseInt(root.style.width) || 300;
-  originalHeight = parseInt(root.style.height) || 180;
+  originalWidth = parseInt(root.style.width) || 400;
+  originalHeight = parseInt(root.style.height) || 300;
 
   // Initialize image extractor when page is ready
   if (document.readyState === 'loading') {

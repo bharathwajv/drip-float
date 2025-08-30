@@ -5,8 +5,8 @@
   }
   
   .dy-container {
-    width: 280px;
-    height: 180px;
+    width: 400px;
+    height: 300px;
     background: white;
     border-radius: 20px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
@@ -17,6 +17,7 @@
     position: relative;
     cursor: move;
     transition: width 0.3s ease, height 0.3s ease;
+    box-sizing: border-box;
   }
   
   .dy-container:hover {
@@ -299,6 +300,7 @@
     display: flex;
     gap: 12px;
     padding: 0 12px 12px 12px;
+    min-height: 0;
   }
   
   .dy-image-slot {
@@ -506,8 +508,8 @@
     right: -20px;
     top: 50%;
     transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 1px solid #e9ecef;
     background: #fff;
@@ -517,10 +519,12 @@
     line-height: 1;
     color: #6c757d;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     opacity: 0;
     animation: popIn 0.5s ease 0.8s forwards;
+    z-index: 2147483648;
   }
   
   .dy-more-bubble:hover {
@@ -548,7 +552,7 @@
     flex-direction: column;
     overflow: hidden;
     padding: 4px;
-    z-index: 10;
+    z-index: 2147483648;
     opacity: 0;
     transform: translateX(20px) scale(0.9);
     pointer-events: none;
