@@ -701,3 +701,95 @@
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
   z-index: 10;
 }
+
+/* Try This Out Button Styles */
+.dy-try-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  height: 100%;
+}
+
+.dy-try-btn {
+  width: auto !important;
+  height: auto !important;
+  padding: 1rem 2rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 25px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 1rem !important;
+}
+
+.dy-try-btn::before {
+  content: "✨";
+  font-size: 1.3rem;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.dy-try-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+}
+
+.dy-try-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4) !important;
+}
+
+.dy-try-subtext {
+  font-size: 0.875rem;
+  color: #6c757d;
+  opacity: 0.8;
+  line-height: 1.4;
+  max-width: 200px;
+}
+
+/* Retry Button Styles */
+.dy-retry-btn {
+  margin-top: 1rem !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3) !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.dy-retry-btn::before {
+  content: "✨";
+  font-size: 1.3rem;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.dy-retry-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
+  background: linear-gradient(135deg, #218838 0%, #1ea085 100%) !important;
+}
+
+.dy-retry-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3) !important;
+}

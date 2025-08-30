@@ -41,14 +41,18 @@
       <div class="dy-body">
         <div class="dy-image-slot" aria-label="Image view">
           <div class="dy-image-placeholder">
-            <div class="dy-loading">🔄</div>
-            <div class="dy-loading-text">Extracting images...</div>
+            <div class="dy-try-button-container">
+              <button class="dy-btn dy-btn-primary dy-try-btn" data-action="try-this-out">
+                Try it on
+              </button>
+              <div class="dy-try-subtext">Generate personalized AI images from this page</div>
+            </div>
           </div>
         </div>
         <div class="dy-side-buttons">
           <button class="dy-btn" data-action="more" title="More Options"><img src="${chrome.runtime.getURL('icons/text-align-justify.svg')}" alt="More Options" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⋯</span></button>
           <button class="dy-btn" data-action="extract" title="Open Full Screen"><img src="${chrome.runtime.getURL('icons/square-arrow-out-up-right.svg')}" alt="Open Full Screen" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">↗</span></button>
-          <button class="dy-btn" data-action="generate" title="Download"><img src="${chrome.runtime.getURL('icons/download.svg')}" alt="Download" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⬇</span></button>
+          <button class="dy-btn" data-action="download-generated" title="Download Image"><img src="${chrome.runtime.getURL('icons/download.svg')}" alt="Download Image" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">🎨</span></button>
         </div>
       </div>
     `;
@@ -219,34 +223,15 @@
       if (window.ImageExtractor) {
         console.log('Image extractor instance created...');
         imageExtractor = new window.ImageExtractor();
-        await extractAndDisplayImages();
-        // Ensure navigation state is properly initialized
-        updateNavigationState();
+        // Don't extract images automatically, show the try button instead
+        showTryThisOutButton();
       } else {
-        console.log('ImageExtractor not found in window, trying fallback...');
-        // Try fallback immediately
-        const ogImage = getOGImageFromPage();
-        if (ogImage) {
-          currentImages = [ogImage];
-          displayCurrentImage();
-          showImageSuccess('Using page preview image (fallback)');
-          updateNavigationState();
-        } else {
-          showImageError('Failed to load image extractor');
-        }
+        console.log('ImageExtractor not found in window, showing try button...');
+        showTryThisOutButton();
       }
     } catch (error) {
       console.error('Error initializing image extractor:', error);
-      // Try fallback immediately
-      const ogImage = getOGImageFromPage();
-      if (ogImage) {
-        currentImages = [ogImage];
-        displayCurrentImage();
-        showImageSuccess('Using page preview image (fallback)');
-        updateNavigationState();
-      } else {
-        showImageError('Failed to initialize image extractor');
-      }
+      showTryThisOutButton();
     }
   };
 
@@ -357,6 +342,85 @@
     updateDownloadButtonState();
   };
 
+  // Show try this out button
+  const showTryThisOutButton = () => {
+    const imageSlot = container.querySelector('.dy-image-slot');
+    imageSlot.innerHTML = `
+      <div class="dy-image-placeholder">
+        <div class="dy-try-button-container">
+          <button class="dy-btn dy-btn-primary dy-try-btn" data-action="try-this-out">
+            Try it on
+          </button>
+          <div class="dy-try-subtext">Generate personalized AI images from this outfit</div>
+        </div>
+      </div>
+    `;
+
+    // Add event listener for the try button
+    const tryBtn = imageSlot.querySelector('[data-action="try-this-out"]');
+    if (tryBtn) {
+      tryBtn.addEventListener('click', handleTryThisOut);
+    }
+    
+    // Update download button state since there are no images initially
+    updateDownloadButtonState();
+  };
+
+  // Handle try this out button click
+  const handleTryThisOut = async () => {
+    try {
+      // Show loading state
+      showImageLoading();
+      
+      // First extract images from the page
+      if (imageExtractor) {
+        const result = await imageExtractor.extractPageImages();
+        currentImages = result.allImages || [];
+        
+        if (currentImages.length > 0) {
+          // Store metadata for image generation
+          if (result.metadata) {
+            window.currentPageMetadata = result.metadata;
+          }
+          
+          // Now generate personalized image
+          await generatePersonalizedImage();
+          
+          // Update navigation state
+          updateNavigationState();
+          
+          // Update download button state since we now have images
+          updateDownloadButtonState();
+        } else {
+          // Fallback: try to get og:image from the page
+          const ogImage = getOGImageFromPage();
+          if (ogImage) {
+            currentImages = [ogImage];
+            await generatePersonalizedImage();
+            updateNavigationState();
+            updateDownloadButtonState();
+          } else {
+            showImageError('No images found on this page');
+          }
+        }
+      } else {
+        // Fallback: try to get og:image from the page
+        const ogImage = getOGImageFromPage();
+        if (ogImage) {
+          currentImages = [ogImage];
+          await generatePersonalizedImage();
+          updateNavigationState();
+          updateDownloadButtonState();
+        } else {
+          showImageError('Failed to extract images');
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleTryThisOut:', error);
+      showImageError('Failed to process page images');
+    }
+  };
+
   // Generate personalized image using AI
   const generatePersonalizedImage = async () => {
     if (currentImages.length === 0 || !currentImages[currentImageIndex]) {
@@ -423,6 +487,12 @@
       showImageError('Failed to start image generation');
     }
   };
+
+  // Set up the try button event listener since it's already in the HTML
+  const tryBtn = container.querySelector('[data-action="try-this-out"]');
+  if (tryBtn) {
+    tryBtn.addEventListener('click', handleTryThisOut);
+  }
 
   // Display generated AI image
   const displayGeneratedImage = (imageData) => {
@@ -522,9 +592,18 @@
     imageSlot.innerHTML = `
       <div class="dy-image-placeholder">
         <div class="dy-error">❌</div>
-        <div class="dy-error-text">${message}</div>
+        <div class="dy-error-text">Something went wrong</div>
+        <button class="dy-btn dy-btn-primary dy-retry-btn" data-action="retry">
+          Try Again
+        </button>
       </div>
     `;
+
+    // Add event listener for retry button
+    const retryBtn = imageSlot.querySelector('[data-action="retry"]');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', handleTryThisOut);
+    }
   };
 
   // Download current image
@@ -696,6 +775,11 @@
       root.style.transition = '';
       container.style.transition = '';
       console.log('Panel expanded, final size:', root.style.width, 'x', root.style.height);
+      
+      // If no images are loaded, show the try button
+      if (currentImages.length === 0) {
+        showTryThisOutButton();
+      }
     }, 300);
   };
 
@@ -732,6 +816,11 @@
       root.style.transition = '';
       container.style.transition = '';
       console.log('Panel collapsed, final size:', root.style.width, 'x', root.style.height);
+      
+      // If no images are loaded, show the try button
+      if (currentImages.length === 0) {
+        showTryThisOutButton();
+      }
     }, 300);
   };
 
@@ -767,6 +856,11 @@
     
     // Update navigation state when restoring
     forceUpdateNavigationState();
+    
+    // If no images are loaded, show the try button
+    if (currentImages.length === 0) {
+      showTryThisOutButton();
+    }
   };
 
   // Load saved minimized state
@@ -940,6 +1034,12 @@
         root.style.display = 'block';
         // Update navigation state when overlay becomes visible
         setTimeout(() => forceUpdateNavigationState(), 100);
+        // If no images are loaded, show the try button
+        setTimeout(() => {
+          if (currentImages.length === 0) {
+            showTryThisOutButton();
+          }
+        }, 150);
       } else {
         root.style.display = 'none';
       }

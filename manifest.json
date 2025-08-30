@@ -32,7 +32,8 @@
       ],
       "js": [
         "content/panel.js",
-         "content/imageExtractor.js"
+         "content/imageExtractor.js",
+         "AI/imagegen.js"
       ],
       "css": [
         "content/panel.css"
