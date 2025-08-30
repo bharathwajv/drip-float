@@ -63,6 +63,7 @@
         "pages/history.html",
         "pages/history.js",
         "content/panel.css",
+        "content/imageExtractor.js",
         "popup/popup.html",
         "popup/popup.js",
         "popup/storageService.js",
@@ -70,6 +71,9 @@
         "options/options.js",
         "config/sites.json",
         "config/sites.js",
+        "AI/prompt.txt",
+        "AI/userImageBase64.txt",
+        "AI/imagegen.js",
         "public/fav_icon_logo.png",
         "icons/*"
       ],

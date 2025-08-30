@@ -638,3 +638,90 @@
   .dy-image-nav .dy-nav-btn {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
+/* AI Generation Spinner */
+.dy-loading.dy-generating {
+  font-size: 2rem;
+  animation: pulse 2s infinite;
+}
+
+.dy-loading-subtext {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Generated Image Styles */
+.dy-generated-image {
+  border: 2px solid #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.dy-image-label {
+  background: #28a745;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dy-image-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+.dy-btn-primary {
+  background: #007bff;
+  color: white;
+  border: 1px solid #007bff;
+}
+
+.dy-btn-primary:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+/* Enhanced loading states */
+.dy-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dy-loading.dy-generating {
+  background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+/* Success message styling */
+.dy-success-message {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28a745;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  z-index: 10;
+}

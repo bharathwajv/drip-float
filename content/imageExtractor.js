@@ -4,6 +4,7 @@ class ImageExtractor {
     this.currentPageImages = [];
     this.ogImage = null;
     this.productImages = [];
+    this.pageMetadata = null;
   }
 
   // Extract all available images from the current page
@@ -18,6 +19,9 @@ class ImageExtractor {
       // Extract general page images
       this.currentPageImages = this.extractGeneralImages();
       
+      // Extract page metadata
+      this.pageMetadata = this.extractPageMetadata();
+      
       // Combine and prioritize images
       const allImages = this.combineAndPrioritizeImages();
       
@@ -26,7 +30,8 @@ class ImageExtractor {
         productImages: this.productImages,
         pageImages: this.currentPageImages,
         allImages: allImages,
-        primaryImage: allImages[0] || null
+        primaryImage: allImages[0] || null,
+        metadata: this.pageMetadata
       };
     } catch (error) {
       console.error('Error extracting images:', error);
@@ -36,6 +41,7 @@ class ImageExtractor {
         pageImages: [],
         allImages: [],
         primaryImage: null,
+        metadata: null,
         error: error.message
       };
     }
@@ -183,16 +189,49 @@ class ImageExtractor {
       title: document.title,
       url: window.location.href,
       description: '',
+      ogDescription: '',
       price: '',
       brand: '',
-      category: ''
+      category: '',
+      productName: ''
     };
 
-    // Extract description
+    // Extract Open Graph description
     const ogDesc = document.querySelector('meta[property="og:description"]');
     if (ogDesc && ogDesc.content) {
-      metadata.description = ogDesc.content;
+      metadata.ogDescription = ogDesc.content;
+      metadata.description = ogDesc.content; // Use og:description as primary description
     }
+
+    // Extract meta description as fallback
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && metaDesc.content && !metadata.description) {
+      metadata.description = metaDesc.content;
+    }
+
+    // Extract product name from various sources
+    const productNameSelectors = [
+      'meta[property="og:title"]',
+      'meta[name="title"]',
+      'h1',
+      '.product-title',
+      '.product-name',
+      '[data-testid*="title"]',
+      '.title'
+    ];
+
+    productNameSelectors.forEach(selector => {
+      try {
+        const element = document.querySelector(selector);
+        if (element && !metadata.productName) {
+          if (element.tagName === 'META') {
+            metadata.productName = element.content || element.getAttribute('content') || '';
+          } else {
+            metadata.productName = element.textContent.trim();
+          }
+        }
+      } catch (e) {}
+    });
 
     // Extract price (common selectors)
     const priceSelectors = [
@@ -200,7 +239,9 @@ class ImageExtractor {
       '.product-price',
       '.price-value',
       '[data-testid*="price"]',
-      '.selling-price'
+      '.selling-price',
+      '.mrp',
+      '.discount-price'
     ];
 
     priceSelectors.forEach(selector => {
@@ -217,14 +258,41 @@ class ImageExtractor {
       '.brand',
       '.product-brand',
       '[data-testid*="brand"]',
-      '.brand-name'
+      '.brand-name',
+      'meta[property="product:brand"]'
     ];
 
     brandSelectors.forEach(selector => {
       try {
         const element = document.querySelector(selector);
         if (element && !metadata.brand) {
-          metadata.brand = element.textContent.trim();
+          if (element.tagName === 'META') {
+            metadata.brand = element.content || element.getAttribute('content') || '';
+          } else {
+            metadata.brand = element.textContent.trim();
+          }
+        }
+      } catch (e) {}
+    });
+
+    // Extract category
+    const categorySelectors = [
+      '.category',
+      '.product-category',
+      '[data-testid*="category"]',
+      '.breadcrumb-item:last-child',
+      'meta[property="product:category"]'
+    ];
+
+    categorySelectors.forEach(selector => {
+      try {
+        const element = document.querySelector(selector);
+        if (element && !metadata.category) {
+          if (element.tagName === 'META') {
+            metadata.category = element.content || element.getAttribute('content') || '';
+          } else {
+            metadata.category = element.textContent.trim();
+          }
         }
       } catch (e) {}
     });
@@ -244,6 +312,40 @@ class ImageExtractor {
       metadata: metadata,
       extractionStatus: 'success'
     };
+  }
+
+  // Get product description for image generation
+  getProductDescription() {
+    if (!this.pageMetadata) {
+      this.pageMetadata = this.extractPageMetadata();
+    }
+
+    // Try to construct a meaningful product description
+    let description = '';
+
+    if (this.pageMetadata.productName) {
+      description += this.pageMetadata.productName;
+    }
+
+    if (this.pageMetadata.brand) {
+      description = `${this.pageMetadata.brand} ${description}`.trim();
+    }
+
+    if (this.pageMetadata.category) {
+      description += ` in ${this.pageMetadata.category}`;
+    }
+
+    if (this.pageMetadata.ogDescription) {
+      // Use og:description if available
+      description = this.pageMetadata.ogDescription;
+    }
+
+    // Fallback to page title if no description
+    if (!description || description.trim() === '') {
+      description = this.pageMetadata.title || 'Product';
+    }
+
+    return description.trim();
   }
 }
 

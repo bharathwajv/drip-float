@@ -266,6 +266,11 @@
       if (currentImages.length > 0) {
         displayCurrentImage();
         showImageSuccess(`Found ${currentImages.length} images`);
+        
+        // Store metadata for image generation
+        if (result.metadata) {
+          window.currentPageMetadata = result.metadata;
+        }
       } else {
         // Fallback: try to get og:image from the page
         const ogImage = getOGImageFromPage();
@@ -327,6 +332,116 @@
     
     // Update download button state
     updateDownloadButtonState();
+  };
+
+  // Generate personalized image using AI
+  const generatePersonalizedImage = async () => {
+    if (currentImages.length === 0 || !currentImages[currentImageIndex]) {
+      showImageError('No image to process');
+      return;
+    }
+
+    const currentImage = currentImages[currentImageIndex];
+    
+    try {
+      // Show generating spinner
+      showImageGenerating();
+      
+      // Load the image generation script
+      const script = document.createElement('script');
+      script.src = chrome.runtime.getURL('AI/imagegen.js');
+      script.onload = async () => {
+        try {
+          // Get product description from metadata
+          let productDescription = 'Product';
+          if (window.currentPageMetadata && window.currentPageMetadata.ogDescription) {
+            productDescription = window.currentPageMetadata.ogDescription;
+          } else if (window.currentPageMetadata && window.currentPageMetadata.description) {
+            productDescription = window.currentPageMetadata.description;
+          } else if (window.currentPageMetadata && window.currentPageMetadata.productName) {
+            productDescription = window.currentPageMetadata.productName;
+          }
+
+          // Call the image generation function
+          const result = await window.ImageGen.generatePersonalizedImage(
+            currentImage.url,
+            productDescription
+          );
+
+          if (result.success && result.imageData) {
+            // Display the generated image
+            displayGeneratedImage(result.imageData);
+            showImageSuccess('AI-generated image ready!');
+          } else {
+            showImageError(`Generation failed: ${result.error || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Error generating image:', error);
+          showImageError('Image generation failed');
+        }
+      };
+      script.onerror = () => {
+        showImageError('Failed to load image generation module');
+      };
+      document.head.appendChild(script);
+      
+    } catch (error) {
+      console.error('Error starting image generation:', error);
+      showImageError('Failed to start image generation');
+    }
+  };
+
+  // Display generated AI image
+  const displayGeneratedImage = (imageData) => {
+    const imageSlot = container.querySelector('.dy-image-slot');
+    
+    // Create blob URL from base64 data
+    const blobUrl = window.ImageGen.base64ToBlobUrl(imageData.data, imageData.mimeType);
+    
+    if (blobUrl) {
+      imageSlot.innerHTML = `
+        <div class="dy-image-container">
+          <img src="${blobUrl}" alt="AI Generated Image" class="dy-extracted-image dy-generated-image" />
+          <div class="dy-image-info">
+            <div class="dy-image-label">AI Generated</div>
+          </div>
+          <div class="dy-image-actions">
+            <button class="dy-btn dy-btn-primary" data-action="download-generated">Download</button>
+            <button class="dy-btn" data-action="back-to-original">Back to Original</button>
+          </div>
+        </div>
+      `;
+
+      // Add event listeners for generated image actions
+      const downloadBtn = imageSlot.querySelector('[data-action="download-generated"]');
+      const backBtn = imageSlot.querySelector('[data-action="back-to-original"]');
+      
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+          window.ImageGen.saveImageToFile(imageData.data, 'ai-generated-image.png', imageData.mimeType);
+        });
+      }
+      
+      if (backBtn) {
+        backBtn.addEventListener('click', () => {
+          displayCurrentImage();
+        });
+      }
+    } else {
+      showImageError('Failed to display generated image');
+    }
+  };
+
+  // Show image generating spinner
+  const showImageGenerating = () => {
+    const imageSlot = container.querySelector('.dy-image-slot');
+    imageSlot.innerHTML = `
+      <div class="dy-image-placeholder">
+        <div class="dy-loading dy-generating">🎨</div>
+        <div class="dy-loading-text">Generating AI image...</div>
+        <div class="dy-loading-subtext">This may take a few moments</div>
+      </div>
+    `;
   };
 
   // Navigation functions
@@ -414,11 +529,11 @@
       if (currentImages.length > 0) {
         downloadBtn.disabled = false;
         downloadBtn.classList.remove('dy-btn-disabled');
-        downloadBtn.title = 'Download';
+        downloadBtn.title = 'Generate AI Image';
       } else {
         downloadBtn.disabled = true;
         downloadBtn.classList.add('dy-btn-disabled');
-        downloadBtn.title = 'No images to download';
+        downloadBtn.title = 'No images to process';
       }
     }
   };
@@ -778,12 +893,8 @@
       // Open full screen
       chrome.runtime.sendMessage({ type: 'OPEN_HISTORY_TAB' });
     } else if (action === 'generate') {
-      // Download functionality
-      if (currentImages.length > 0 && currentImages[currentImageIndex]) {
-        downloadCurrentImage();
-      } else {
-        showImageError('No image to download');
-      }
+      // Generate AI image
+      generatePersonalizedImage();
     }
   });
 
