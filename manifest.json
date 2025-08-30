@@ -31,7 +31,8 @@
         "http://*/*"
       ],
       "js": [
-        "content/panel.js"
+        "content/panel.js",
+         "content/imageExtractor.js"
       ],
       "css": [
         "content/panel.css"

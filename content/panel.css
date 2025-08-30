@@ -322,36 +322,55 @@
   
   .dy-image-nav {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
     transition: all 0.3s ease;
   }
   
   .dy-image-nav.dy-expanded {
-    gap: 200px;
+    /* Expanded state - buttons stay at edges */
+  }
+  
+  /* Position buttons at edges in expanded state */
+  .dy-image-nav.dy-expanded .dy-nav-btn:first-child {
+    margin-left: 24px;
+  }
+  
+  .dy-image-nav.dy-expanded .dy-nav-btn:last-child {
+    margin-right: 24px;
+  }
+  
+  /* Always show navigation buttons when there are multiple images */
+  .dy-image-nav.dy-multiple-images .dy-nav-btn {
+    opacity: 1 !important;
+    filter: blur(0) !important;
+    transform: scale(1) !important;
   }
   
   .dy-nav-btn {
     all: unset;
-    width: 40px;
-    height: 40px;
-    background: rgba(0,0,0,0.8);
+    width: 28px;
+    height: 28px;
+    padding: 10px;
+    opacity: 0.5;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
     opacity: 0;
     filter: blur(8px);
     transform: scale(0.8);
+    pointer-events: auto;
   }
   
   .dy-image-nav.dy-expanded .dy-nav-btn {
@@ -361,15 +380,15 @@
   }
   
   .dy-nav-btn:hover:not(:disabled) {
-    background: rgba(0,0,0,0.9);
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(189, 189, 189, 0.3);
   }
   
   .dy-nav-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
     transform: scale(0.8);
+    background: rgb(228, 228, 228);
   }
   
   /* Individual button positioning for expanded state */
@@ -396,10 +415,14 @@
     transform: scale(0.8) translateX(0);
   }
   
-  /* Smooth transition for collapsing */
-  .dy-image-nav.dy-collapsing .dy-nav-btn {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  .dy-image-nav.dy-multiple-images .dy-nav-btn:hover:not(:disabled) {
+  
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.4);
   }
+  
+
   
   /* Success message */
   .dy-success-message {
@@ -563,68 +586,22 @@
     }
   }
   
-  /* Navigation button animations */
-  @keyframes navButtonExpand {
-    from {
-      opacity: 0;
-      filter: blur(8px);
-      transform: scale(0.8) translateX(0);
-    }
-    to {
-      opacity: 1;
-      filter: blur(0);
-      transform: scale(1) translateX(var(--expand-distance));
-    }
-  }
-  
-  @keyframes navButtonCollapse {
-    from {
-      opacity: 1;
-      filter: blur(0);
-      transform: scale(1) translateX(var(--expand-distance));
-    }
-    to {
-      opacity: 0;
-      filter: blur(8px);
-      transform: scale(0.8) translateX(0);
-    }
-  }
-  
-  /* Apply animations based on state */
-  .dy-image-nav.dy-expanding .dy-nav-btn:first-child {
-    animation: navButtonExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    --expand-distance: -100px;
-  }
-  
-  .dy-image-nav.dy-expanding .dy-nav-btn:last-child {
-    animation: navButtonExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    --expand-distance: 100px;
-  }
-  
-  .dy-image-nav.dy-collapsing .dy-nav-btn:first-child {
-    animation: navButtonCollapse 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    --expand-distance: -100px;
-  }
-  
-  .dy-image-nav.dy-collapsing .dy-nav-btn:last-child {
-    animation: navButtonCollapse 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    --expand-distance: 100px;
-  }
+
   
   /* Hide navigation when only one image */
-  .dy-image-nav:not(.dy-expanded) .dy-nav-btn {
+  .dy-image-nav:not(.dy-multiple-images) .dy-nav-btn {
     opacity: 0;
     pointer-events: none;
     filter: blur(8px);
-    transform: scale(0.8) translateX(0);
+    transform: scale(0.8);
   }
   
-  /* Show navigation only when expanded and multiple images */
-  .dy-image-nav.dy-expanded .dy-nav-btn {
+  /* Show navigation when multiple images exist */
+  .dy-image-nav.dy-multiple-images .dy-nav-btn {
     opacity: 1;
     pointer-events: auto;
     filter: blur(0);
-    transform: scale(1) translateX(var(--expand-distance, 0));
+    transform: scale(1);
   }
   
   /* Enhanced blur effect for better visual feedback */
@@ -635,7 +612,7 @@
   
   /* Smooth transitions for all states */
   .dy-image-nav .dy-nav-btn {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
   }
 
 /* AI Generation Spinner */

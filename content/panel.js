@@ -198,20 +198,33 @@
   const initImageExtractor = async () => {
     try {
       console.log('Initializing image extractor...');
-      // Load the image extractor script
+      
+      // Load the image extractor script content directly
+      const response = await fetch(chrome.runtime.getURL('content/imageExtractor.js'));
+      const scriptContent = await response.text();
+      
+      // Create a script element and inject the content
       const script = document.createElement('script');
-      script.src = chrome.runtime.getURL('content/imageExtractor.js');
-      script.onload = async () => {
-        if (window.ImageExtractor) {
-          imageExtractor = new window.ImageExtractor();
-          await extractAndDisplayImages();
-          // Ensure navigation state is properly initialized
-          updateNavigationState();
-        }
-      };
-      script.onerror = () => {
-        // If script fails to load, try fallback immediately
-        console.log('Image extractor script failed to load, trying fallback...');
+      script.textContent = scriptContent;
+      
+      // Inject the script into the page context
+      (document.head || document.documentElement).appendChild(script);
+      
+      // Wait a bit for the script to execute
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('Image extractor script loaded...');
+      
+      // Check if ImageExtractor is now available
+      if (window.ImageExtractor) {
+        console.log('Image extractor instance created...');
+        imageExtractor = new window.ImageExtractor();
+        await extractAndDisplayImages();
+        // Ensure navigation state is properly initialized
+        updateNavigationState();
+      } else {
+        console.log('ImageExtractor not found in window, trying fallback...');
+        // Try fallback immediately
         const ogImage = getOGImageFromPage();
         if (ogImage) {
           currentImages = [ogImage];
@@ -221,8 +234,7 @@
         } else {
           showImageError('Failed to load image extractor');
         }
-      };
-      document.head.appendChild(script);
+      }
     } catch (error) {
       console.error('Error initializing image extractor:', error);
       // Try fallback immediately
@@ -242,6 +254,7 @@
   const extractAndDisplayImages = async () => {
     if (!imageExtractor) return;
 
+    console.log('Extracting and displaying images...');
     // Set a timeout to fallback to og:image if extraction takes too long
     const extractionTimeout = setTimeout(() => {
       console.log('Image extraction timed out, using fallback...');
@@ -272,6 +285,9 @@
         if (result.metadata) {
           window.currentPageMetadata = result.metadata;
         }
+        
+        // Ensure navigation state is updated after images are loaded
+        setTimeout(() => forceUpdateNavigationState(), 100);
       } else {
         // Fallback: try to get og:image from the page
         const ogImage = getOGImageFromPage();
@@ -315,8 +331,14 @@
           <div class="dy-image-counter">${currentImageIndex + 1}/${currentImages.length}</div>
         </div>
         <div class="dy-image-nav">
-          <button class="dy-nav-btn" data-action="prev" ${currentImageIndex === 0 ? 'disabled' : ''}>‹</button>
-          <button class="dy-nav-btn" data-action="next" ${currentImageIndex === currentImages.length - 1 ? 'disabled' : ''}>›</button>
+          <button class="dy-nav-btn" data-action="prev" ${currentImageIndex === 0 ? 'disabled' : ''}>
+            <img src="${chrome.runtime.getURL('icons/circle-chevron-left.svg')}" alt="Previous" width="24" height="24" onerror="this.style.display='none'; this.nextSibling.style.display='inline';">
+            <span style="display:none;">‹</span>
+          </button>
+          <button class="dy-nav-btn" data-action="next" ${currentImageIndex === currentImages.length - 1 ? 'disabled' : ''}>
+            <img src="${chrome.runtime.getURL('icons/circle-chevron-right.svg')}" alt="Next" width="24" height="24" onerror="this.style.display='none'; this.nextSibling.style.display='inline';">
+            <span style="display:none;">›</span>
+          </button>
         </div>
       </div>
     `;
@@ -348,21 +370,33 @@
       // Show generating spinner
       showImageGenerating();
       
-      // Load the image generation script
-      const script = document.createElement('script');
-      script.src = chrome.runtime.getURL('AI/imagegen.js');
-      script.onload = async () => {
-        try {
-          // Get product description from metadata
-          let productDescription = 'Product';
-          if (window.currentPageMetadata && window.currentPageMetadata.ogDescription) {
-            productDescription = window.currentPageMetadata.ogDescription;
-          } else if (window.currentPageMetadata && window.currentPageMetadata.description) {
-            productDescription = window.currentPageMetadata.description;
-          } else if (window.currentPageMetadata && window.currentPageMetadata.productName) {
-            productDescription = window.currentPageMetadata.productName;
-          }
+      // Load the image generation script content directly
+      try {
+        const response = await fetch(chrome.runtime.getURL('AI/imagegen.js'));
+        const scriptContent = await response.text();
+        
+        // Create a script element and inject the content
+        const script = document.createElement('script');
+        script.textContent = scriptContent;
+        
+        // Inject the script into the page context
+        (document.head || document.documentElement).appendChild(script);
+        
+        // Wait a bit for the script to execute
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get product description from metadata
+        let productDescription = 'Product';
+        if (window.currentPageMetadata && window.currentPageMetadata.ogDescription) {
+          productDescription = window.currentPageMetadata.ogDescription;
+        } else if (window.currentPageMetadata && window.currentPageMetadata.description) {
+          productDescription = window.currentPageMetadata.description;
+        } else if (window.currentPageMetadata && window.currentPageMetadata.productName) {
+          productDescription = window.currentPageMetadata.productName;
+        }
 
+        // Check if ImageGen is now available
+        if (window.ImageGen) {
           // Call the image generation function
           const result = await window.ImageGen.generatePersonalizedImage(
             currentImage.url,
@@ -376,15 +410,13 @@
           } else {
             showImageError(`Generation failed: ${result.error || 'Unknown error'}`);
           }
-        } catch (error) {
-          console.error('Error generating image:', error);
-          showImageError('Image generation failed');
+        } else {
+          showImageError('Image generation module not loaded');
         }
-      };
-      script.onerror = () => {
+      } catch (error) {
+        console.error('Error loading image generation script:', error);
         showImageError('Failed to load image generation module');
-      };
-      document.head.appendChild(script);
+      }
       
     } catch (error) {
       console.error('Error starting image generation:', error);
@@ -543,11 +575,24 @@
   const updateNavigationState = () => {
     const imageNav = container.querySelector('.dy-image-nav');
     if (imageNav && currentImages.length > 1) {
+      // Always show navigation when there are multiple images
+      imageNav.classList.add('dy-multiple-images');
+      
       if (isExpanded) {
         imageNav.classList.add('dy-expanded');
       } else {
         imageNav.classList.remove('dy-expanded', 'dy-expanding', 'dy-collapsing');
       }
+    } else if (imageNav) {
+      // Hide navigation when there's only one image
+      imageNav.classList.remove('dy-multiple-images', 'dy-expanded', 'dy-expanding', 'dy-collapsing');
+    }
+  };
+  
+  // Force update navigation state - call this when panel state changes
+  const forceUpdateNavigationState = () => {
+    if (currentImages.length > 1) {
+      updateNavigationState();
     }
   };
 
@@ -566,8 +611,6 @@
     const menuAction = menuItem.dataset.menu;
     if (menuAction === 'history' || menuAction === 'open-full') {
       chrome.runtime.sendMessage({ type: 'OPEN_HISTORY_TAB' });
-    } else if (menuAction === 'extract-images') {
-      extractAndDisplayImages();
     }
     
     // Hide dropdown after selection
@@ -602,15 +645,6 @@
       }
     });
   };
-
-  // Save dimensions to storage
-  const saveDimensions = () => {
-    chrome.storage.local.set({ 
-      panelWidth: originalWidth, 
-      panelHeight: originalHeight 
-    });
-  };
-
   // Two-mode resize functionality
   const toggleResize = () => {
     if (isExpanded) {
@@ -651,14 +685,10 @@
     resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('icons/minimize-2.svg') + '" alt="Collapse" width="16" height="16" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'inline\';"><span style="display:none;">⤢</span>';
     resizeBtn.title = 'Collapse';
     
-    // Animate navigation buttons to expanded state
+    // Update navigation buttons to expanded state
     const imageNav = container.querySelector('.dy-image-nav');
     if (imageNav && currentImages.length > 1) {
-      imageNav.classList.add('dy-expanding');
-      setTimeout(() => {
-        imageNav.classList.remove('dy-expanding');
-        imageNav.classList.add('dy-expanded');
-      }, 50);
+      imageNav.classList.add('dy-multiple-images', 'dy-expanded');
     }
     
     // Remove transition after animation
@@ -690,14 +720,11 @@
     resizeBtn.innerHTML = '<img src="' + chrome.runtime.getURL('icons/maximize-2.svg') + '" alt="Expand" width="16" height="16" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'inline\';"><span style="display:none;">⤡</span>';
     resizeBtn.title = 'Expand';
     
-    // Animate navigation buttons to collapsed state
+    // Update navigation buttons to collapsed state
     const imageNav = container.querySelector('.dy-image-nav');
     if (imageNav && currentImages.length > 1) {
       imageNav.classList.remove('dy-expanded');
-      imageNav.classList.add('dy-collapsing');
-      setTimeout(() => {
-        imageNav.classList.remove('dy-collapsing');
-      }, 400);
+      // Keep dy-multiple-images class for visibility in collapsed state
     }
     
     // Remove transition after animation
@@ -725,6 +752,9 @@
     
     // Store minimized state
     chrome.storage.local.set({ panelMinimized: true });
+    
+    // Update navigation state when minimizing
+    forceUpdateNavigationState();
   };
 
   const restorePanel = () => {
@@ -734,6 +764,9 @@
     
     // Store restored state
     chrome.storage.local.set({ panelMinimized: false });
+    
+    // Update navigation state when restoring
+    forceUpdateNavigationState();
   };
 
   // Load saved minimized state
@@ -905,6 +938,8 @@
     const toggleOverlay = (visible) => {
       if (visible) {
         root.style.display = 'block';
+        // Update navigation state when overlay becomes visible
+        setTimeout(() => forceUpdateNavigationState(), 100);
       } else {
         root.style.display = 'none';
       }
