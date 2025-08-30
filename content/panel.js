@@ -81,8 +81,6 @@
     dropdownStyle.textContent = `
       .dy-dropdown-menu {
         position: absolute;
-        top: 100%;
-        right: 0;
         background: white;
         border: 1px solid #e9ecef;
         border-radius: 8px;
@@ -437,7 +435,21 @@
   // Dropdown menu functionality
   const toggleDropdownMenu = () => {
     const dropdown = shadow.querySelector('.dy-dropdown-menu');
-    dropdown.classList.toggle('dy-hidden');
+    const moreButton = container.querySelector('[data-action="more"]');
+    
+    if (dropdown.classList.contains('dy-hidden')) {
+      // Position dropdown relative to the more button
+      const buttonRect = moreButton.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      
+      // Calculate position relative to the root container
+      dropdown.style.top = `${buttonRect.top - rootRect.top}px`;
+      dropdown.style.right = `${rootRect.right - buttonRect.right}px`;
+      
+      dropdown.classList.remove('dy-hidden');
+    } else {
+      dropdown.classList.add('dy-hidden');
+    }
   };
 
   // Handle dropdown menu item clicks

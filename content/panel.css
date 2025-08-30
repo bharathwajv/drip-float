@@ -168,8 +168,8 @@
   }
 
   .dy-bubble-logo {
-    width: 32px;
-    height: 32px;
+    width: 62px;
+    height: 62px;
     object-fit: contain;
     opacity: 0.9;
   }
@@ -195,6 +195,7 @@
     background: rgba(255, 255, 255, 0.95);
     z-index: 10;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    opacity: 0.6;
   }
 
   .dy-bubble-close:hover {

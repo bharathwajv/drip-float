@@ -17,17 +17,31 @@
       box-sizing: border-box;
     }
 
-    .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 24px 20px;
-      text-align: center;
-      border-radius: 0 0 20px 20px;
-      position: relative;
-      overflow: hidden;
-    }
+    /* Replace/override previous header, logo-container, header-content, logo-image rules with these */
+.header {
 
-    .header::before {
+      background: radial-gradient(100% 100% at var(--22-x-position) var(--22-y-position), #00FAA7 -27%, transparent),
+                  radial-gradient(100% 100% at var(--23-x-position) var(--23-y-position), #3cc2dd -24%, transparent),
+                  radial-gradient(100% 100% at var(--24-x-position) var(--24-y-position), #3858f5 26%, transparent),
+                  radial-gradient(100% 100% at var(--25-x-position) var(--25-y-position), #6b23d7 -24%, transparent),
+                  #1b253b;
+      animation-name: main;
+      animation-iteration-count: infinite;
+      animation-duration: 10s;
+      transition-timing-function: ease-out;
+   
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 20px 20px;
+  padding: 16px;                /* reduced padding so no large free space */
+  display: flex;
+  align-items: center;
+  justify-content: center;     /* center the inner row block */
+  color: white;
+  min-height: 94px;            /* set a predictable height */
+  box-sizing: border-box;
+
+  .header::before {
       content: '';
       position: absolute;
       top: 0;
@@ -36,47 +50,202 @@
       bottom: 0;
       background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
       pointer-events: none;
+  }}
+
+/* inner row that contains logo + text - ensures no free space on right */
+.header-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  gap: 12px;                   /* small gap between logo and text */
+  padding-right: 6px;          /* keep a little breathing room on the right */
+  box-sizing: border-box;
+}
+
+/* Logo - fixed size, no extra margin */
+.logo-image {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  flex: 0 0 56px;              /* fixed box so text can occupy remaining space */
+  border-radius: 8px;
+  padding: 6px;
+  background: rgba(255,255,255,0.06);
+  filter: drop-shadow(0 8px 22px rgba(0,0,0,0.18));
+  display: block;
+}
+
+ /* Text block fills remaining width with no free space */
+ .header-content {
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   flex: 1 1 auto;             /* stretch to use remaining space */
+   min-width: 0;               /* allow text truncation if needed */
+   padding: 8px 0;             /* add vertical padding to texts */
+ }
+
+ /* Tight, consistent text spacing to avoid vertical free space */
+ .header h1 {
+   margin: 0;
+   font-size: 22px;
+   line-height: 1.05;
+   font-weight: 700;
+   text-shadow: 0 2px 6px rgba(0,0,0,0.28);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;        /* keep single-line, removes vertical wrapping space */
+   padding: 4px 0;             /* add horizontal padding to title */
+ }
+
+ .header p {
+   margin: 2px 0 0 0;
+   font-size: 13px;
+   line-height: 1.1;
+   opacity: 0.95;
+   text-shadow: 0 1px 3px rgba(0,0,0,0.18);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   padding: 2px 0;             /* add horizontal padding to description */
+ }
+
+ /* ensure decorative layers do not affect layout */
+ .bg-image, .blobs, .tint {
+   position: absolute;
+   inset: -20px;
+   z-index: 0;
+   pointer-events: none;
+ }
+.header-inner { z-index: 2; }
+
+/* Optional: when the viewport is very narrow, allow heading to wrap gracefully */
+@media (max-width: 360px) {
+  .header h1 { white-space: normal; font-size: 20px; }
+  .header p  { white-space: normal; font-size: 12px; }
+}
+
+
+    /* CSS Custom Properties for gradient animation */
+    @property --22-x-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 77.4609375%;
+    }
+    @property --22-y-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 17.656249999999996%;
+    }
+    @property --23-x-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 15.898437500000002%;
+    }
+    @property --23-y-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 27.265625000000004%;
+    }
+    @property --24-x-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 72.7734375%;
+    }
+    @property --24-y-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 59.49218750000001%;
+    }
+    @property --25-x-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 37.03125000000001%;
+    }
+    @property --25-y-position {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 51.28906250000001%;
+    }
+
+    /* Root variables for gradient positions */
+    :root {
+      --6-x-position: 77.4609375%;
+      --6-y-position: 17.656249999999996%;
+      --7-x-position: 15.898437500000002%;
+      --7-y-position: 27.265625000000004%;
+      --8-x-position: 72.7734375%;
+      --8-y-position: 59.49218750000001%;
+      --9-x-position: 63.98437500000001%;
+      --9-y-position: 31.953125000000004%;
+      --10-x-position: 77.4609375%;
+      --10-y-position: 17.656249999999996%;
+      --11-x-position: 15.898437500000002%;
+      --11-y-position: 27.265625000000004%;
+      --12-x-position: 72.7734375%;
+      --12-y-position: 59.49218750000001%;
+      --13-x-position: 27.851562500000004%;
+      --13-y-position: 68.8671875%;
+      --14-x-position: 77.4609375%;
+      --14-y-position: 17.656249999999996%;
+      --15-x-position: 15.898437500000002%;
+      --15-y-position: 27.265625000000004%;
+      --16-x-position: 72.7734375%;
+      --16-y-position: 59.49218750000001%;
+      --17-x-position: 27.851562500000004%;
+      --17-y-position: 68.8671875%;
+      --18-x-position: 77.4609375%;
+      --18-y-position: 17.656249999999996%;
+      --19-x-position: 15.898437500000002%;
+      --19-y-position: 27.265625000000004%;
+      --20-x-position: 72.7734375%;
+      --20-y-position: 59.49218750000001%;
+      --21-x-position: 37.03125000000001%;
+      --21-y-position: 51.28906250000001%;
+      --22-x-position: 77.4609375%;
+      --22-y-position: 17.656249999999996%;
+      --23-x-position: 15.898437500000002%;
+      --23-y-position: 27.265625000000004%;
+      --24-x-position: 72.7734375%;
+      --24-y-position: 59.49218750000001%;
+      --25-x-position: 37.03125000000001%;
+      --25-y-position: 51.28906250000001%;
+    }
+
+    /* Keyframes for the gradient animation */
+    @keyframes main {
+      25% {
+        --22-x-position: 85%;
+        --22-y-position: 80%;
+        --23-x-position: 15%;
+        --23-y-position: 15%;
+      }
+      50% {
+        --22-x-position: 15%;
+        --22-y-position: 85%;
+        --23-x-position: 80%;
+        --23-y-position: 15%;
+        --24-x-position: 20%;
+        --24-y-position: 20%;
+        --25-x-position: 20%;
+        --25-y-position: 20%;
+      }
     }
 
     .logo-container {
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      gap: 12px;
+      justify-content: flex-start;
+      margin-bottom: 0;
+      gap: 20px;
     }
 
-    .logo-image {
-      width: 48px;
-      height: 48px;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
-    }
 
-    .header-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .header h1 {
-      margin: 0 0 8px 0;
-      font-size: 28px;
-      font-weight: 700;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      letter-spacing: -0.5px;
-    }
-
-    .header p {
-      margin: 0;
-      opacity: 0.95;
-      font-size: 15px;
-      font-weight: 400;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
 
     .content {
       padding: 20px;
-      height: calc(100% - 140px);
+      height: calc(100% - 120px);
       overflow-y: auto;
     }
 
@@ -184,14 +353,22 @@
 </head>
 <body>
   <div class="header">
-    <div class="logo-container">
-      <img src="../public/full_logo.png" alt="Drip Float Logo" class="logo-image">
-    </div>
+  <div class="bg-image" id="bgImage" aria-hidden="true"></div>
+  <div class="blobs" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="tint" aria-hidden="true"></div>
+
+  <div class="header-inner">
+    <img src="../public/full_logo.png" alt="Drip Float logo" class="logo-image">
     <div class="header-content">
       <h1>Drip Float</h1>
-      <p>AI Fashion Collaboration Platform</p>
+      <p>Try the dress, virtually real.</p>
     </div>
   </div>
+</div>
 
   <div class="content">
 
