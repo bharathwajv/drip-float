@@ -1,4 +1,4 @@
-# DripYou Float Overlay - Chrome Extension
+# Drip Float Overlay - Chrome Extension
 
 A Manifest V3 Chrome extension that injects a draggable floating overlay on shopping pages, featuring a compact design with image preview, action buttons, and a comprehensive popup interface for user management.
 
@@ -56,7 +56,7 @@ A Manifest V3 Chrome extension that injects a draggable floating overlay on shop
 ## File Structure
 
 ```
-dripyou-float-overlay/
+drip-float-overlay/
 ├── manifest.json          # Extension configuration
 ├── sw.js                  # Service worker (background)
 ├── content/
@@ -172,4 +172,4 @@ For testing purposes, the extension accepts any email and password combination:
 
 ---
 
-Built with ❤️ for the DripYou fashion collaboration platform
+Built with ❤️ for the Drip Float fashion collaboration platform

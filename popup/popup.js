@@ -1,110 +1,214 @@
 // popup/popup.js
 (() => {
+  // Initialize storage service
+  const storageService = new StorageService();
+  
   // DOM elements
-  const loginSection = document.getElementById('loginSection');
-  const userSection = document.getElementById('userSection');
-  const loginForm = document.getElementById('loginForm');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const userAvatar = document.getElementById('userAvatar');
-  const userName = document.getElementById('userName');
-  const userEmail = document.getElementById('userEmail');
-  const tokenFill = document.getElementById('tokenFill');
-  const statusMessage = document.getElementById('statusMessage');
   const historyBtn = document.getElementById('historyBtn');
   const overlayBtn = document.getElementById('overlayBtn');
+  const overlayBtnText = document.getElementById('overlayBtnText');
   const settingsBtn = document.getElementById('settingsBtn');
-  const helpBtn = document.getElementById('helpBtn');
+  const resizeToggle = document.getElementById('resizeToggle');
+  const resizeHandle = document.getElementById('resizeHandle');
+  const addCurrentSiteBtn = document.getElementById('addCurrentSiteBtn');
+  const sizePresets = document.getElementById('sizePresets');
 
   // State
-  let isLoggedIn = false;
-  let currentUser = null;
+  let isResizable = true;
+  let isResizing = false;
+  let startX, startY, startWidth, startHeight;
+  let overlayVisible = false;
 
   // Initialize
-  const init = () => {
-    checkLoginStatus();
+  const init = async () => {
+    console.log('Initializing popup...');
+    await loadPopupSettings();
+    await checkOverlayState();
     setupEventListeners();
+    console.log('Popup initialization complete');
   };
 
-  // Check if user is logged in
-  const checkLoginStatus = () => {
-    chrome.storage.local.get(['user', 'isLoggedIn'], (result) => {
-      if (result.isLoggedIn && result.user) {
-        isLoggedIn = true;
-        currentUser = result.user;
-        showUserSection();
+  // Check overlay state
+  const checkOverlayState = async () => {
+    try {
+      const result = await chrome.storage.local.get(['overlayVisible']);
+      overlayVisible = result.overlayVisible !== false; // Default to true if not set
+      updateOverlayButtonState();
+    } catch (error) {
+      console.error('Error checking overlay state:', error);
+      overlayVisible = true;
+      updateOverlayButtonState();
+    }
+  };
+
+  // Update overlay button state
+  const updateOverlayButtonState = () => {
+    if (overlayVisible) {
+      overlayBtn.classList.remove('hidden');
+      overlayBtnText.textContent = 'Hide Overlay';
+    } else {
+      overlayBtn.classList.add('hidden');
+      overlayBtnText.textContent = 'Show Overlay';
+    }
+  };
+
+  // Load popup settings
+  const loadPopupSettings = async () => {
+    try {
+      console.log('Loading popup settings...');
+      const settings = await storageService.getPopupSettings();
+      console.log('Loaded settings:', settings);
+      isResizable = settings.isResizable;
+      
+      // Apply saved dimensions
+      if (settings.width && settings.height) {
+        document.body.style.width = `${settings.width}px`;
+        document.body.style.height = `${settings.height}px`;
+        console.log('Applied saved dimensions:', settings.width, 'x', settings.height);
+        // Set active size preset button
+        setActiveSizePreset(settings.width, settings.height);
       } else {
-        showLoginSection();
+        // Set default dimensions if none exist
+        document.body.style.width = '380px';
+        document.body.style.height = '500px';
+        console.log('Applied default dimensions: 380 x 500');
+        setActiveSizePreset(380, 500);
       }
-    });
+      
+      updateResizeUI();
+    } catch (error) {
+      console.error('Error loading popup settings:', error);
+      // Use default settings if there's an error
+      isResizable = true;
+      document.body.style.width = '380px';
+      document.body.style.height = '500px';
+      console.log('Applied fallback dimensions: 380 x 500');
+      updateResizeUI();
+    }
   };
 
   // Setup event listeners
   const setupEventListeners = () => {
-    loginForm.addEventListener('submit', handleLogin);
-    logoutBtn.addEventListener('click', handleLogout);
     historyBtn.addEventListener('click', openDashboard);
     settingsBtn.addEventListener('click', openDashboard);
     overlayBtn.addEventListener('click', toggleOverlay);
-    helpBtn.addEventListener('click', showHelp);
-  };
-
-  // Handle login
-  const handleLogin = async (e) => {
-    e.preventDefault();
+    addCurrentSiteBtn.addEventListener('click', addCurrentSite);
+    resizeToggle.addEventListener('click', toggleResizable);
     
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
+    // Resize handle events
+    resizeHandle.addEventListener('mousedown', startResize);
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', stopResize);
     
-    if (!email || !password) {
-      showStatus('Please fill in all fields', 'error');
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock user data
-      const user = {
-        id: 'user_123',
-        name: email.split('@')[0],
-        email: email,
-        avatar: email.charAt(0).toUpperCase()
-      };
-      
-      // Save to storage
-      chrome.storage.local.set({
-        user: user,
-        isLoggedIn: true
+    // Size preset button events
+    document.querySelectorAll('.size-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const width = parseInt(btn.dataset.width);
+        const height = parseInt(btn.dataset.height);
+        setPopupSize(width, height);
+        
+        // Update active state
+        document.querySelectorAll('.size-preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
       });
-      
-      isLoggedIn = true;
-      currentUser = user;
-      showUserSection();
-      showStatus('Login successful!', 'success');
-      
-      // Clear form
-      loginForm.reset();
-      
+    });
+  };
+
+
+
+  // Toggle resizable functionality
+  const toggleResizable = async () => {
+    try {
+      console.log('Toggling resizable, current state:', isResizable);
+      isResizable = !isResizable;
+      await storageService.setResizable(isResizable);
+      updateResizeUI();
+      console.log(`Resizable ${isResizable ? 'enabled' : 'disabled'}`);
     } catch (error) {
-      showStatus('Login failed. Please try again.', 'error');
-    } finally {
-      setLoading(false);
+      console.error('Error toggling resizable:', error);
+      // Revert the change if there's an error
+      isResizable = !isResizable;
+      updateResizeUI();
     }
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    chrome.storage.local.remove(['user', 'isLoggedIn']);
-    isLoggedIn = false;
-    currentUser = null;
-    showLoginSection();
-    showStatus('Logged out successfully', 'success');
+  // Update resize UI
+  const updateResizeUI = () => {
+    console.log('Updating resize UI, isResizable:', isResizable);
+    if (isResizable) {
+      resizeHandle.style.display = 'block';
+      sizePresets.style.display = 'flex';
+      resizeToggle.classList.remove('disabled');
+      resizeToggle.innerHTML = '↔';
+      resizeToggle.title = 'Disable Resizable';
+      console.log('Resize enabled - handle visible, toggle active');
+    } else {
+      resizeHandle.style.display = 'none';
+      sizePresets.style.display = 'none';
+      resizeToggle.classList.add('disabled');
+      resizeToggle.innerHTML = '⊞';
+      resizeToggle.title = 'Enable Resizable';
+      console.log('Resize disabled - handle hidden, toggle inactive');
+    }
+  };
+
+  // Start resize operation
+  const startResize = (e) => {
+    if (!isResizable) return;
+    
+    isResizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = parseInt(document.body.style.width) || 380;
+    startHeight = parseInt(document.body.style.height) || 500;
+    
+    showResizeStatus('Resizing...');
+    e.preventDefault();
+  };
+
+  // Handle resize operation
+  const handleResize = (e) => {
+    if (!isResizing) return;
+    
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    const newWidth = Math.max(300, startWidth + deltaX);
+    const newHeight = Math.max(400, startHeight + deltaY);
+    
+    // Apply new dimensions
+    document.body.style.width = `${newWidth}px`;
+    document.body.style.height = `${newHeight}px`;
+    
+    // Also try to resize the popup window if possible
+    try {
+      if (window.resizeTo) {
+        window.resizeTo(newWidth, newHeight);
+      }
+    } catch (e) {
+      console.log('Could not resize popup window (Chrome extension limitation)');
+    }
+  };
+
+  // Stop resize operation
+  const stopResize = async () => {
+    if (!isResizing) return;
+    
+    isResizing = false;
+    
+    // Save new dimensions
+    const newWidth = parseInt(document.body.style.width);
+    const newHeight = parseInt(document.body.style.height);
+    
+    if (newWidth && newHeight) {
+      try {
+        await storageService.updatePopupSize(newWidth, newHeight);
+        showResizeStatus(`Size: ${newWidth} × ${newHeight}`);
+      } catch (error) {
+        console.error('Error saving popup dimensions:', error);
+        showStatus('Failed to save popup size', 'error');
+      }
+    }
   };
 
   // Toggle overlay
@@ -113,9 +217,10 @@
       if (tabs[0]) {
         chrome.tabs.sendMessage(tabs[0].id, { type: 'TOGGLE_OVERLAY' }, (response) => {
           if (response && response.ok) {
-            showStatus('Overlay toggled', 'success');
-          } else {
-            showStatus('Failed to toggle overlay', 'error');
+            overlayVisible = !overlayVisible;
+            updateOverlayButtonState();
+            // Save state to storage
+            chrome.storage.local.set({ overlayVisible: overlayVisible });
           }
         });
       }
@@ -134,7 +239,7 @@
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       
       if (!tab) {
-        showStatus('Could not get current tab information', 'error');
+        console.error('Could not get current tab information');
         return;
       }
       
@@ -144,102 +249,80 @@
       const siteIcon = hostname.charAt(0).toUpperCase();
       
       // Check if site is already in the list
-      chrome.storage.local.get(['userSites'], (result) => {
-        const userSites = result.userSites || [];
-        
-        // Check if site already exists (either in user sites or default sites)
-        const defaultSites = [
-          'https://www.myntra.com',
-          'https://www.ajio.com', 
-          'https://www.flipkart.com',
-          'https://www.amazon.in',
-          'https://www.nykaa.com'
-        ];
-        
-        if (userSites.some(site => site.url === currentUrl) || 
-            defaultSites.includes(currentUrl)) {
-          showStatus('This site is already in your supported sites list', 'info');
-          return;
-        }
-        
-        // Add the new site
-        const newSite = {
-          url: currentUrl,
-          name: siteName,
-          icon: siteIcon
-        };
-        
-        userSites.push(newSite);
-        
-        chrome.storage.local.set({ userSites }, () => {
-          showStatus(`${siteName} added to supported sites!`, 'success');
-          
-          // Update the button text temporarily
-          const originalText = addCurrentSiteBtn.innerHTML;
-          addCurrentSiteBtn.innerHTML = '✅ Added!';
-          addCurrentSiteBtn.disabled = true;
-          
-          setTimeout(() => {
-            addCurrentSiteBtn.innerHTML = originalText;
-            addCurrentSiteBtn.disabled = false;
-          }, 2000);
-        });
-      });
+      const userSites = await storageService.getUserSites();
+      
+      // Check if site already exists (either in user sites or default sites)
+      const defaultSites = [
+        'https://www.myntra.com',
+        'https://www.ajio.com', 
+        'https://www.flipkart.com',
+        'https://www.amazon.in',
+        'https://www.nykaa.com'
+      ];
+      
+      if (userSites.some(site => site.url === currentUrl) || 
+          defaultSites.includes(currentUrl)) {
+        console.log('This site is already in your supported sites list');
+        return;
+      }
+      
+      // Add the new site
+      const newSite = {
+        url: currentUrl,
+        name: siteName,
+        icon: siteIcon
+      };
+      
+      await storageService.addUserSite(newSite);
+      console.log(`${siteName} added to supported sites!`);
+      
+      // Update the button text temporarily
+      const originalText = addCurrentSiteBtn.innerHTML;
+      addCurrentSiteBtn.innerHTML = '✅ Added!';
+      addCurrentSiteBtn.disabled = true;
+      
+      setTimeout(() => {
+        addCurrentSiteBtn.innerHTML = originalText;
+        addCurrentSiteBtn.disabled = false;
+      }, 2000);
       
     } catch (error) {
       console.error('Error adding current site:', error);
-      showStatus('Failed to add current site', 'error');
     }
   };
 
-  // Show help
-  const showHelp = () => {
-    showStatus('Help documentation coming soon!', 'info');
-  };
 
-  // Show user section
-  const showUserSection = () => {
-    if (currentUser) {
-      userAvatar.textContent = currentUser.avatar;
-      userName.textContent = currentUser.name;
-      userEmail.textContent = currentUser.email;
-    }
+
+
+
+
+
+  // Set popup size
+  const setPopupSize = async (width, height) => {
+    document.body.style.width = `${width}px`;
+    document.body.style.height = `${height}px`;
     
-    loginSection.style.display = 'none';
-    userSection.classList.add('show');
-  };
-
-  // Show login section
-  const showLoginSection = () => {
-    userSection.classList.remove('show');
-    loginSection.style.display = 'block';
-  };
-
-  // Set loading state
-  const setLoading = (loading) => {
-    const btnText = loginBtn.querySelector('.btn-text');
-    const spinner = loginBtn.querySelector('.spinner');
-    
-    if (loading) {
-      btnText.style.display = 'none';
-      spinner.style.display = 'inline-block';
-      loginBtn.classList.add('loading');
-    } else {
-      btnText.style.display = 'inline';
-      spinner.style.display = 'none';
-      loginBtn.classList.remove('loading');
+    try {
+      await storageService.updatePopupSize(width, height);
+      console.log(`Size set to ${width} × ${height}`);
+      setActiveSizePreset(width, height);
+    } catch (error) {
+      console.error('Error saving popup size:', error);
     }
   };
 
-  // Show status message
-  const showStatus = (message, type = 'info') => {
-    statusMessage.textContent = message;
-    statusMessage.className = `status ${type}`;
-    statusMessage.style.display = 'block';
-    
-    setTimeout(() => {
-      statusMessage.style.display = 'none';
-    }, 3000);
+  // Set active size preset button
+  const setActiveSizePreset = (width, height) => {
+    document.querySelectorAll('.size-preset-btn').forEach(btn => {
+      const btnWidth = parseInt(btn.dataset.width);
+      const btnHeight = parseInt(btn.dataset.height);
+      
+      if (btnWidth === width && btnHeight === height) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
   };
 
   // Initialize when DOM is ready

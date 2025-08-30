@@ -1,8 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "DripYou Float Overlay",
+  "name": "Drip Float",
   "version": "0.1.0",
   "description": "Draggable floating overlay with basic layout, history stub, and options toggle.",
+  "icons": {
+    "16": "public/fav_icon_logo.png",
+    "32": "public/fav_icon_logo.png",
+    "48": "public/fav_icon_logo.png",
+    "128": "public/fav_icon_logo.png",
+    "512": "public/fav_icon_logo.png"
+  },
   "background": {
     "service_worker": "sw.js",
     "type": "module"
@@ -32,21 +39,34 @@
     }
   ],
   "options_ui": {
-    "page": "pages/dashboard.html",
+    "page": "options/options.html",
     "open_in_tab": true
   },
   "action": {
-    "default_title": "DripYou Float Overlay",
-    "default_popup": "popup/popup.html"
+    "default_title": "Drip Float",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "public/fav_icon_logo.png",
+      "32": "public/fav_icon_logo.png",
+      "48": "public/fav_icon_logo.png",
+      "128": "public/fav_icon_logo.png"
+    }
   },
   "web_accessible_resources": [
     {
       "resources": [
         "pages/dashboard.html",
+        "pages/dashboard.js",
         "pages/history.html",
+        "pages/history.js",
         "content/panel.css",
         "popup/popup.html",
-        "config/sites.json"
+        "popup/popup.js",
+        "popup/storageService.js",
+        "options/options.html",
+        "options/options.js",
+        "config/sites.json",
+        "public/fav_icon_logo.png"
       ],
       "matches": [
         "https://*/*",

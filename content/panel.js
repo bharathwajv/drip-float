@@ -2,7 +2,7 @@
 (() => {
   // Create the root element to host the shadow DOM
   const root = document.createElement('div');
-  root.id = 'dripyou-float-root';
+  root.id = 'drip-float-root';
   Object.assign(root.style, {
     position: 'fixed',
     bottom: '24px',
@@ -24,7 +24,9 @@
   container.className = 'dy-container';
   container.innerHTML = `
     <div class="dy-header">
+      <button class="dy-resize" aria-label="Resize">⤡</button>
       <div class="dy-drag-handle" title="Drag to move"></div>
+      <button class="dy-minimize" aria-label="Minimize">−</button>
       <button class="dy-close" aria-label="Close">✕</button>
     </div>
     <div class="dy-body">
@@ -38,6 +40,27 @@
         <button class="dy-btn" data-action="extract" title="Extract Images">📷</button>
         <button class="dy-btn" data-action="generate" title="Generate AI Image">✨</button>
       </div>
+    </div>
+  `;
+
+  // Minimized bubble container
+  const minimizedBubble = document.createElement('div');
+  minimizedBubble.className = 'dy-minimized-bubble dy-hidden';
+  minimizedBubble.innerHTML = `
+    <button class="dy-bubble-close" aria-label="Close">✕</button>
+    <button class="dy-bubble-move" aria-label="Move">⤡</button>
+    <div class="dy-bubble-content">
+      <img src="${chrome.runtime.getURL('public/fav_icon_logo.png')}" alt="DripFloat" class="dy-bubble-logo" />
+    </div>
+  `;
+
+  // Dismiss area indicator
+  const dismissArea = document.createElement('div');
+  dismissArea.className = 'dy-dismiss-area dy-hidden';
+  dismissArea.innerHTML = `
+    <div class="dy-dismiss-content">
+      <div class="dy-dismiss-icon">🗑️</div>
+      <div class="dy-dismiss-text">Drop to dismiss</div>
     </div>
   `;
 
@@ -58,6 +81,8 @@
 
   // Append elements to the shadow DOM
   shadow.appendChild(container);
+  shadow.appendChild(minimizedBubble);
+  shadow.appendChild(dismissArea);
   shadow.appendChild(moreBubble);
   shadow.appendChild(menu);
   document.documentElement.appendChild(root);
@@ -66,6 +91,16 @@
   let imageExtractor = null;
   let currentImages = [];
   let currentImageIndex = 0;
+  let isMinimized = false;
+  let isResizing = false;
+  let startResizeX = 0, startResizeY = 0;
+  let startWidth = 0, startHeight = 0;
+  let bubbleDragging = false;
+  let bubbleStartX = 0, bubbleStartY = 0;
+  let bubbleStartLeft = 0, bubbleStartTop = 0;
+  let isOverDismissArea = false;
+  let dragEndTime = 0;
+  const CLICK_DELAY = 150; // 150ms delay to prevent accidental clicks after drag
 
   // Fallback function to get og:image from the page
   const getOGImageFromPage = () => {
@@ -219,7 +254,6 @@
       <div class="dy-image-container">
         <img src="${currentImage.url}" alt="${currentImage.alt}" class="dy-extracted-image" />
         <div class="dy-image-info">
-          <div class="dy-image-type">${currentImage.type}</div>
           <div class="dy-image-counter">${currentImageIndex + 1}/${currentImages.length}</div>
         </div>
         <div class="dy-image-nav">
@@ -287,6 +321,100 @@
     `;
   };
 
+  // Load saved dimensions from storage
+  const loadSavedDimensions = () => {
+    chrome.storage.local.get(['panelWidth', 'panelHeight'], (result) => {
+      if (result.panelWidth && result.panelHeight) {
+        root.style.width = `${result.panelWidth}px`;
+        root.style.height = `${result.panelHeight}px`;
+      }
+    });
+  };
+
+  // Save dimensions to storage
+  const saveDimensions = () => {
+    const width = parseInt(root.style.width);
+    const height = parseInt(root.style.height);
+    chrome.storage.local.set({ 
+      panelWidth: width, 
+      panelHeight: height 
+    });
+  };
+
+  // Resize functionality
+  const startResize = (e) => {
+    isResizing = true;
+    startResizeX = e.clientX;
+    startResizeY = e.clientY;
+    startWidth = parseInt(root.style.width);
+    startHeight = parseInt(root.style.height);
+    
+    document.addEventListener('mousemove', onResize);
+    document.addEventListener('mouseup', endResize);
+    e.preventDefault();
+  };
+
+  const onResize = (e) => {
+    if (!isResizing) return;
+    
+    const dx = e.clientX - startResizeX;
+    const dy = e.clientY - startResizeY;
+    
+    const newWidth = Math.max(200, startWidth + dx);
+    const newHeight = Math.max(120, startHeight + dy);
+    
+    root.style.width = `${newWidth}px`;
+    root.style.height = `${newHeight}px`;
+  };
+
+  const endResize = () => {
+    if (!isResizing) return;
+    
+    isResizing = false;
+    document.removeEventListener('mousemove', onResize);
+    document.removeEventListener('mouseup', endResize);
+    
+    // Save new dimensions
+    saveDimensions();
+  };
+
+  // Minimize functionality
+  const minimizePanel = () => {
+    isMinimized = true;
+    container.classList.add('dy-hidden');
+    moreBubble.classList.add('dy-hidden');
+    menu.classList.add('dy-hidden');
+    minimizedBubble.classList.remove('dy-hidden');
+    
+    // Reset bubble to default position when minimizing
+    minimizedBubble.style.left = 'auto';
+    minimizedBubble.style.top = 'auto';
+    minimizedBubble.style.right = '24px';
+    minimizedBubble.style.bottom = '24px';
+    
+    // Store minimized state
+    chrome.storage.local.set({ panelMinimized: true });
+  };
+
+  const restorePanel = () => {
+    isMinimized = false;
+    container.classList.remove('dy-hidden');
+    moreBubble.classList.remove('dy-hidden');
+    minimizedBubble.classList.add('dy-hidden');
+    
+    // Store restored state
+    chrome.storage.local.set({ panelMinimized: false });
+  };
+
+  // Load saved minimized state
+  const loadSavedState = () => {
+    chrome.storage.local.get(['panelMinimized'], (result) => {
+      if (result.panelMinimized) {
+        minimizePanel();
+      }
+    });
+  };
+
   // --- Enhanced Drag Functionality - Entire container draggable except specific areas ---
   let dragging = false;
   let startX = 0, startY = 0;
@@ -301,7 +429,9 @@
         target.closest('.dy-nav-btn') ||
         target.closest('.dy-more-bubble') ||
         target.closest('.dy-menu') ||
-        target.closest('.dy-menu-item')) {
+        target.closest('.dy-menu-item') ||
+        target.closest('.dy-resize') ||
+        target.closest('.dy-minimize')) {
       return;
     }
 
@@ -362,12 +492,196 @@
     });
   });
 
+  // Minimized bubble drag functionality
+  const startBubbleDrag = (e) => {
+    // Only start dragging if clicking the move button
+    if (!e.target.closest('.dy-bubble-move')) {
+      return;
+    }
+    
+    // Don't start dragging immediately, wait for movement
+    const rect = minimizedBubble.getBoundingClientRect();
+    bubbleStartX = e.clientX;
+    bubbleStartY = e.clientY;
+    bubbleStartLeft = rect.left;
+    bubbleStartTop = rect.top;
+    
+    // Add a small threshold to distinguish between clicks and drags
+    const dragThreshold = 5; // 5px movement threshold
+    
+    const checkForDrag = (moveEvent) => {
+      const dx = Math.abs(moveEvent.clientX - bubbleStartX);
+      const dy = Math.abs(moveEvent.clientY - bubbleStartY);
+      
+      if (dx > dragThreshold || dy > dragThreshold) {
+        // Start actual dragging
+        bubbleDragging = true;
+        minimizedBubble.classList.add('dragging');
+        
+        // Show dismiss area
+        dismissArea.classList.remove('dy-hidden');
+        
+        document.addEventListener('mousemove', onBubbleDrag);
+        document.addEventListener('mouseup', endBubbleDrag);
+        
+        // Remove the mousemove listener that was checking for drag threshold
+        document.removeEventListener('mousemove', checkForDrag);
+        document.removeEventListener('mouseup', checkForDrag);
+      }
+    };
+    
+    document.addEventListener('mousemove', checkForDrag);
+    document.addEventListener('mouseup', (e) => {
+      checkForDrag(e);
+      handleMouseUp();
+    });
+  };
+
+  const onBubbleDrag = (e) => {
+    if (!bubbleDragging) return;
+    
+    const dx = e.clientX - bubbleStartX;
+    const dy = e.clientY - bubbleStartY;
+    
+    minimizedBubble.style.left = `${bubbleStartLeft + dx}px`;
+    minimizedBubble.style.top = `${bubbleStartTop + dy}px`;
+    minimizedBubble.style.right = 'auto';
+    minimizedBubble.style.bottom = 'auto';
+    
+    // Check if bubble is over dismiss area
+    const bubbleRect = minimizedBubble.getBoundingClientRect();
+    const dismissRect = dismissArea.getBoundingClientRect();
+    
+    const isOver = !(bubbleRect.right < dismissRect.left || 
+                     bubbleRect.left > dismissRect.right || 
+                     bubbleRect.bottom < dismissRect.top || 
+                     bubbleRect.top > dismissRect.bottom);
+    
+    if (isOver !== isOverDismissArea) {
+      isOverDismissArea = isOver;
+      if (isOver) {
+        dismissArea.classList.add('dy-dismiss-active');
+        minimizedBubble.classList.add('dy-over-dismiss');
+      } else {
+        dismissArea.classList.remove('dy-dismiss-active');
+        minimizedBubble.classList.remove('dy-over-dismiss');
+      }
+    }
+  };
+
+  const endBubbleDrag = () => {
+    if (!bubbleDragging) return;
+    
+    bubbleDragging = false;
+    minimizedBubble.classList.remove('dragging');
+    minimizedBubble.classList.remove('dy-over-dismiss');
+    document.removeEventListener('mousemove', onBubbleDrag);
+    document.removeEventListener('mouseup', endBubbleDrag);
+    
+    // Set drag end time to prevent immediate clicks
+    dragEndTime = Date.now();
+    
+    // Hide dismiss area
+    dismissArea.classList.add('dy-hidden');
+    dismissArea.classList.remove('dy-dismiss-active');
+    
+    // Check if bubble was dropped over dismiss area
+    if (isOverDismissArea) {
+      // Dismiss the bubble (hide it completely)
+      root.style.display = 'none';
+      chrome.storage.local.set({ overlayVisible: false });
+      return;
+    }
+    
+    // Save bubble position if not dismissed
+    saveBubblePosition();
+  };
+
+  // Handle mouse up when drag threshold wasn't met (click case)
+  const handleMouseUp = () => {
+    // If we didn't start dragging, this was just a click
+    if (!bubbleDragging) {
+      // Reset drag end time for click handling
+      dragEndTime = Date.now();
+    }
+  };
+
+  const saveBubblePosition = () => {
+    const rect = minimizedBubble.getBoundingClientRect();
+    chrome.storage.local.set({
+      bubbleLeft: rect.left,
+      bubbleTop: rect.top
+    });
+  };
+
+  const loadBubblePosition = () => {
+    chrome.storage.local.get(['bubbleLeft', 'bubbleTop'], (result) => {
+      if (result.bubbleLeft && result.bubbleTop) {
+        minimizedBubble.style.left = `${result.bubbleLeft}px`;
+        minimizedBubble.style.top = `${result.bubbleTop}px`;
+        minimizedBubble.style.right = 'auto';
+        minimizedBubble.style.bottom = 'auto';
+      }
+    });
+  };
+
   // --- UI Event Listeners ---
   container.querySelector('.dy-close').addEventListener('click', () => {
     root.style.display = 'none';
     // Update storage to reflect hidden state
     chrome.storage.local.set({ overlayVisible: false });
   });
+
+  // Resize button event listener
+  container.querySelector('.dy-resize').addEventListener('mousedown', startResize);
+  container.querySelector('.dy-resize').addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    startResize({
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      preventDefault: () => {}
+    });
+  });
+
+  // Minimize button event listener
+  container.querySelector('.dy-minimize').addEventListener('click', minimizePanel);
+
+
+
+  // Minimized bubble close button
+  minimizedBubble.querySelector('.dy-bubble-close').addEventListener('click', () => {
+    root.style.display = 'none';
+    chrome.storage.local.set({ overlayVisible: false });
+  });
+
+  // Minimized bubble click to restore
+  minimizedBubble.addEventListener('click', (e) => {
+    console.log('Minimized bubble clicked');
+    
+    // Only restore if clicking the content area (not buttons) and no drag occurred
+    if (e.target.closest('.dy-bubble-content') && !bubbleDragging) {
+      console.log('Restoring panel...');
+      restorePanel();
+    }
+  });
+
+
+
+  // Minimized bubble drag event listeners - only on move button
+  minimizedBubble.querySelector('.dy-bubble-move').addEventListener('mousedown', startBubbleDrag);
+  minimizedBubble.querySelector('.dy-bubble-move').addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    startBubbleDrag({
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      preventDefault: () => {},
+      target: e.target
+    });
+  });
+
+
 
   // Side button actions
   container.addEventListener('click', (e) => {
@@ -469,6 +783,11 @@
       return false;
     }
   };
+
+  // Load saved dimensions and state
+  loadSavedDimensions();
+  loadSavedState();
+  loadBubblePosition();
 
   // Initialize image extractor when page is ready
   if (document.readyState === 'loading') {

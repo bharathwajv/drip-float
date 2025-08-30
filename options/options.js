@@ -1,5 +1,5 @@
 // options/options.js
-class DripYouOptions {
+class DripFloatOptions {
   constructor() {
     this.defaultSites = [];
     this.customSites = [];
@@ -253,5 +253,5 @@ class DripYouOptions {
 
 // Initialize options when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  new DripYouOptions();
+  new DripFloatOptions();
 });
