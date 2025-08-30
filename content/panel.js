@@ -73,7 +73,7 @@
     dropdownMenu.innerHTML = `
       <button class="dy-dropdown-item" data-menu="history">History</button>
       <button class="dy-dropdown-item" data-menu="open-full">Open Full Page</button>
-      <button class="dy-dropdown-item" data-menu="extract-images">Extract Images</button>
+      <button class="dy-dropdown-item" data-menu="open-settings">Open Settings</button>
     `;
     
     // Add CSS styling for the dropdown menu
@@ -82,6 +82,9 @@
       .dy-dropdown-menu {
         position: absolute;
         background: white;
+        top: 30%;
+        right: 0;
+        left: 100%;
         border: 1px solid #e9ecef;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -435,21 +438,8 @@
   // Dropdown menu functionality
   const toggleDropdownMenu = () => {
     const dropdown = shadow.querySelector('.dy-dropdown-menu');
-    const moreButton = container.querySelector('[data-action="more"]');
-    
-    if (dropdown.classList.contains('dy-hidden')) {
-      // Position dropdown relative to the more button
-      const buttonRect = moreButton.getBoundingClientRect();
-      const rootRect = root.getBoundingClientRect();
-      
-      // Calculate position relative to the root container
-      dropdown.style.top = `${buttonRect.top - rootRect.top}px`;
-      dropdown.style.right = `${rootRect.right - buttonRect.right}px`;
-      
-      dropdown.classList.remove('dy-hidden');
-    } else {
-      dropdown.classList.add('dy-hidden');
-    }
+    dropdown.classList.toggle('dy-hidden');
+
   };
 
   // Handle dropdown menu item clicks
@@ -607,6 +597,12 @@
     isMinimized = true;
     container.classList.add('dy-hidden');
     minimizedBubble.classList.remove('dy-hidden');
+    
+    // Hide dropdown menu when minimizing
+    const dropdown = shadow.querySelector('.dy-dropdown-menu');
+    if (dropdown) {
+      dropdown.classList.add('dy-hidden');
+    }
     
     // Load saved bubble position or use default
     loadBubblePosition();
@@ -771,12 +767,6 @@
       restorePanel();
     }
   });
-
-
-
-
-
-
 
   // Side button actions
   container.addEventListener('click', (e) => {
