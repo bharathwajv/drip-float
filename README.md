@@ -19,7 +19,7 @@ A Manifest V3 Chrome extension that injects a draggable floating overlay on shop
 
 ### 2. Configure Extension
 1. Open `AI/imagegen.js`
-2. Replace `'AIzaSyB4nJbdrowqPWDN0i5VjF3b8LzYkqb0jaA'` with your actual API key
+2. Replace imagegen.js - GEMINI_API_KEY with your actual API key
 3. Save the file
 
 ### 3. Load Extension
