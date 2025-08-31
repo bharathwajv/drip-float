@@ -2,9 +2,9 @@
  * Image Generation using Google Gemini API
  * Generates personalized product images by replacing models with user photos
  */
-const testMode = true;
+const testMode = false;
 // Configuration
-const GEMINI_API_KEY = 'your key here'; // Replace with your actual API key
+const GEMINI_API_KEY = 'AIzaSyB4nJbdrowqPWDN0i5VjF3b8LzYkqb0jaA'; // Replace with your actual API key
 const GEMINI_MODEL = 'gemini-2.5-flash-image-preview';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -184,7 +184,8 @@ async function generatePersonalizedImage(ogImageUrl, productDescription, daisyCh
 
             result = await response.json();
         } else {
-
+            // Simulate a 4 second delay to mimic real API generation time in test mode
+            await new Promise(resolve => setTimeout(resolve, 4000));
             result = await fetch(chrome.runtime.getURL('AI/testData.json'));
             result = await result.json();
         }
