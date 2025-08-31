@@ -1029,6 +1029,19 @@
     }
   });
 
+  // Open current image in new tab for full screen viewing
+  const openImageInNewTab = () => {
+    const imageSlot = container.querySelector('.dy-image-slot');
+    const currentImage = imageSlot.querySelector('.dy-extracted-image');
+    
+    if (currentImage) {
+      const imageUrl = currentImage.src;
+      window.open(imageUrl, '_blank');
+    } else {
+      showImageError('No image to open');
+    }
+  };
+
   // Side button actions
   container.addEventListener('click', (e) => {
     const action = e.target.closest('.dy-btn')?.dataset.action;
@@ -1036,8 +1049,8 @@
       // Toggle dropdown menu
       toggleDropdownMenu();
     } else if (action === 'extract') {
-      // Open full screen
-      chrome.runtime.sendMessage({ type: 'OPEN_HISTORY_TAB' });
+      // Open current image in new tab for full screen viewing
+      openImageInNewTab();
     } else if (action === 'generate') {
       // Generate AI image
       generatePersonalizedImage();
