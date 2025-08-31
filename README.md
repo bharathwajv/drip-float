@@ -1,173 +1,143 @@
 # Drip Float Overlay - Chrome Extension
 
-A Manifest V3 Chrome extension that injects a draggable floating overlay on shopping pages, featuring a compact design with image preview, action buttons, and a comprehensive popup interface for user management.
+A Manifest V3 Chrome extension that injects a draggable floating overlay on shopping pages, featuring AI-powered image generation, personalized product visualization, and a comprehensive popup interface.
 
-## Features
+## ✨ New Features
 
-✅ **Floating Overlay**: Compact 280x180px draggable panel positioned in bottom-right corner  
-✅ **Drag & Drop**: Click and drag the handle to move the overlay anywhere on the page  
-✅ **Hide/Show Toggle**: Options page and popup controls overlay visibility  
-✅ **More Menu**: Circular button (⋯) with dropdown for History and Full Page options  
-✅ **History Page**: Opens in new tab with sample generated images  
-✅ **Popup Interface**: Click extension icon for login, token usage, and quick actions  
-✅ **User Authentication**: Login/logout with session persistence  
-✅ **Token Management**: Visual display of AI generation token usage  
-✅ **Responsive Design**: Clean UI with hover effects and smooth transitions  
+🤖 **AI Image Generation**: Generate personalized product images using Google Gemini API  
+🔄 **Daisy Chain Mode**: Use generated images as input for subsequent generations  
+📐 **Resizable Popup**: Customizable popup size with persistent settings  
+🛍️ **Smart Site Detection**: Automatic product extraction from 15+ shopping sites  
+📱 **Cross-Site Persistence**: Daisy chain images persist across different websites  
 
-## Installation & Testing
+## 🚀 Quick Setup
 
-### 1. Load Extension in Chrome
+### 1. Get Gemini API Key
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Create a new API key
+3. Copy your API key
 
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode" (toggle in top-right)
-3. Click "Load unpacked" and select this folder
-4. The extension should appear in your extensions list
+### 2. Configure Extension
+1. Open `AI/imagegen.js`
+2. Replace `'AIzaSyB4nJbdrowqPWDN0i5VjF3b8LzYkqb0jaA'` with your actual API key
+3. Save the file
 
-### 2. Test the Overlay
+### 3. Load Extension
+1. Open Chrome → `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked" → Select this folder
 
-1. Navigate to any website (the extension works on `<all_urls>`)
-2. Look for the floating overlay in the bottom-right corner
-3. The overlay should appear automatically (unless disabled in options)
+## 🎯 Core Features
 
-### 3. Test the Popup
+### Floating Overlay
+- **280x180px** draggable panel in bottom-right corner
+- **Drag & Drop**: Click handle to move anywhere on page
+- **Hide/Show**: Toggle via options or popup controls
+- **More Menu**: History and full page options
 
-1. Click the extension icon in the Chrome toolbar
-2. You'll see a login form (use any email/password for demo)
-3. After login, view your profile, token usage, and quick actions
-4. Use the quick action buttons to control the extension
+### AI Image Generation
+- **Personalized Products**: Replace models with user photos
+- **Smart Extraction**: Automatically detects product images and descriptions
+- **High Quality**: 8K commercial fashion photography style
+- **Fast Generation**: Optimized for quick response times
 
-### 4. Test Features
+### Daisy Chain Mode
+- **Progressive Personalization**: Each generation builds on the previous
+- **Cross-Site Continuity**: Generated images persist across websites
+- **Easy Toggle**: Switch between default and chained modes
+- **Visual Feedback**: Link/unlink icons with animations
 
-- **Drag**: Click and drag the small handle (gray bar) in the header
-- **Close**: Click the ✕ button to hide the overlay
-- **More Menu**: Click the circular ⋯ button to see options
-- **History**: Click "History" in the more menu or popup to open full page
-- **Login**: Use any email/password combination in the popup
-- **Token Usage**: View your AI generation token consumption
-- **Quick Actions**: Toggle overlay, open history, access settings
+### Popup Interface
+- **Resizable Design**: Customize popup size (300x400px minimum)
+- **User Authentication**: Login with session persistence
+- **Token Management**: Visual AI generation token usage
+- **Quick Actions**: History, overlay toggle, settings access
 
-### 5. Access Options
+## 🛍️ Supported Sites
 
-1. Right-click the extension icon in Chrome toolbar
-2. Select "Options" 
-3. Toggle "Show overlay by default" on/off
-4. Refresh any page to see the change take effect
+**Fashion & Beauty**: Myntra, AJIO, Nykaa, Purplle, Voonik, Limeroad  
+**E-commerce**: Flipkart, Amazon India, Snapdeal, ShopClues  
+**Electronics**: Tata CLiQ, Reliance Digital, Croma  
+**Others**: Koovs, Paytm Mall  
 
-## File Structure
+## 📁 File Structure
 
 ```
 drip-float-overlay/
-├── manifest.json          # Extension configuration
-├── sw.js                  # Service worker (background)
+├── AI/
+│   ├── imagegen.js          # Gemini API integration
+│   ├── prompt.txt           # AI generation prompts
+│   └── userImageBase64.txt  # Default user image
+├── config/
+│   └── sites.js            # Centralized site configuration
 ├── content/
-│   ├── panel.js          # Content script (injects overlay)
-│   └── panel.css         # Overlay styling
+│   ├── panel.js            # Floating overlay logic
+│   └── panel.css           # Overlay styling
 ├── popup/
-│   ├── popup.html        # Popup UI (extension icon click)
-│   └── popup.js          # Popup functionality
+│   ├── popup.html          # Resizable popup UI
+│   ├── popup.js            # Popup functionality
+│   └── storageService.js   # Storage management
 ├── options/
-│   ├── options.html      # Options page UI
-│   └── options.js        # Options page logic
+│   ├── options.html        # Extension settings
+│   └── options.js          # Settings logic
 └── pages/
-    └── history.html      # History page (opens in new tab)
+    ├── dashboard.html      # User dashboard
+    └── history.html        # Generated images history
 ```
 
-## Popup Features
+## 🔧 Technical Details
 
-### Authentication
-- **Login Form**: Email and password fields with validation
-- **Session Management**: Persistent login state across browser sessions
-- **User Profile**: Display user name, email, and avatar
+- **Manifest V3**: Modern Chrome extension architecture
+- **Shadow DOM**: Isolated overlay rendering
+- **Service Worker**: Background tasks and messaging
+- **Chrome Storage**: Persistent user preferences and data
+- **ES6 Modules**: Modern JavaScript organization
+- **Cross-Site Persistence**: Daisy chain images across websites
 
-### Token Usage
-- **Visual Progress Bar**: Shows used vs. remaining AI generation tokens
-- **Real-time Updates**: Token consumption tracking (mock data for demo)
-- **Usage Statistics**: Clear display of current token status
-
-### Quick Actions
-- **History**: Opens full history page in new tab
-- **Toggle Overlay**: Show/hide the floating overlay on current page
-- **Settings**: Opens extension options page
-- **Help**: Displays support information
-
-## Technical Details
-
-- **Manifest V3**: Uses modern Chrome extension architecture
-- **Shadow DOM**: Overlay renders in isolated shadow DOM to avoid CSS conflicts
-- **Service Worker**: Handles background tasks, tab creation, and messaging
-- **Chrome Storage**: Persists user preferences, auth state, and overlay visibility
-- **Content Scripts**: Injects overlay on all matching pages
-- **Message Passing**: Communication between popup, content script, and service worker
-- **Popup API**: Chrome extension popup for main user interface
-
-## Customization
+## 🎨 Customization
 
 ### Styling
-- Edit `content/panel.css` to modify overlay appearance
-- Edit `popup/popup.html` to customize popup design
-- Adjust dimensions in both CSS and JavaScript files
+- Edit `content/panel.css` for overlay appearance
+- Modify `popup/popup.html` for popup design
+- Adjust dimensions in CSS and JavaScript files
 
-### Positioning
-- Change default position in `content/panel.js` (lines 8-12)
-- Modify drag behavior in the drag event handlers
+### AI Generation
+- Update `AI/prompt.txt` for different generation styles
+- Modify `AI/userImageBase64.txt` for default user image
+- Adjust generation parameters in `AI/imagegen.js`
 
-### Options
-- Add new settings in `options/options.html` and `options/options.js`
-- Update service worker to handle new option types
-- Extend popup functionality in `popup/popup.js`
+### Site Configuration
+- Add new sites in `config/sites.js`
+- Update site patterns for automatic detection
+- Configure site-specific extraction logic
 
-### Authentication
-- Replace mock login in `popup/popup.js` with real API calls
-- Implement proper token refresh and validation
-- Add additional user profile fields as needed
-
-## Future Enhancements
-
-- [ ] Real product page detection and metadata extraction
-- [ ] AI image generation integration with actual providers
-- [ ] Real-time collaboration features with Firebase
-- [ ] WebRTC for live co-editing sessions
-- [ ] Advanced token management and billing integration
-- [ ] User preferences and customization options
-- [ ] Analytics and usage tracking
-
-## Troubleshooting
+## 🔍 Troubleshooting
 
 **Overlay not appearing?**
-- Check if extension is enabled in `chrome://extensions/`
-- Verify options page setting for "Show overlay by default"
-- Check popup overlay toggle state
-- Refresh the page after making changes
+- Check extension is enabled in `chrome://extensions/`
+- Verify "Show overlay by default" in options
+- Refresh page after changes
 
-**Can't drag the overlay?**
-- Make sure you're clicking the small gray handle bar in the header
-- Check browser console for any JavaScript errors
+**AI generation failing?**
+- Ensure valid Gemini API key is set in `AI/imagegen.js`
+- Check browser console for API errors
+- Verify internet connection
 
-**Popup not working?**
-- Ensure the extension has storage permission
-- Check browser console for storage-related errors
-- Verify popup HTML and JavaScript files are properly loaded
+**Daisy chain not working?**
+- Check Chrome storage permissions
+- Verify daisy chain button state
+- Clear browser cache if needed
 
-**Login issues?**
-- Current implementation uses mock authentication
-- Check browser console for any JavaScript errors
-- Verify storage permissions are granted
+## 🌐 Browser Compatibility
 
-**Options not saving?**
-- Ensure the extension has storage permission
-- Check browser console for storage-related errors
-- Verify service worker is active
-
-## Browser Compatibility
-
-- **Chrome 88+** (Manifest V3 support required)
+- **Chrome 88+** (Manifest V3 required)
 - **Edge 88+** (Chromium-based)
-- **Other Chromium-based browsers**
+- **Other Chromium browsers**
 
-## Demo Credentials
+## 📝 Demo Credentials
 
-For testing purposes, the extension accepts any email and password combination:
-- **Email**: Any valid email format (e.g., `user@example.com`)
+For testing, use any email/password combination:
+- **Email**: `user@example.com`
 - **Password**: Any non-empty string
 
 ---
