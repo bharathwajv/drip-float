@@ -142,4 +142,15 @@ For testing, use any email/password combination:
 
 ---
 
-Built with ❤️ for the Drip Float fashion collaboration platform
+## ⚠️ IMPORTANT CAUTION
+
+**This code was generated using Cursor AI and requires thorough review before production usage.**
+
+- **Code Review Required**: All generated code should be carefully reviewed for security, functionality, and best practices
+- **Production Readiness**: This extension is provided as-is and may require modifications for production deployment
+- **User Discretion**: Users are responsible for validating all code before using in production environments
+- **Testing Recommended**: Thorough testing is advised before deployment to ensure proper functionality and security
+
+Please review all code thoroughly and make necessary adjustments before using in production.
+
+Built with ❤️ by Bharathwaj Vasudevan
