@@ -4,7 +4,7 @@
  */
 const testMode = false;
 // Configuration
-const GEMINI_API_KEY = 'AIzaSyB4nJbdrowqPWDN0i5VjF3b8LzYkqb0jaA'; // Replace with your actual API key
+const GEMINI_API_KEY = 'your code here'; // Replace with your actual API key
 const GEMINI_MODEL = 'gemini-2.5-flash-image-preview';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
