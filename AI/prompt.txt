@@ -1,0 +1,45 @@
+Use the uploaded user photo [USER_IMAGE_REFERENCE] as the identity reference. Produce a single photorealistic landscape image (16:9 aspect ratio, optimized for 1024x576) with the USER as the model. Preserve unique facial features, skin tone, hairline, eye shape, and proportions; no beautification unless requested.
+Primary subject
+* Full-body photorealistic portrait of the USER standing naturally and relaxed, confident posture, straight-on eye-level camera. Hands visible - avoid stiff mannequin poses.
+* If the composition benefits, include one creative close-up variant focused on shoes or wrist - see variants below - but final deliverable must be landscape format and framed for 16:9.
+Clothing & product integration
+* Base outfit: stylish contemporary shirt and complementary pants (well fitted).
+* Integrate the featured product described as "[USER_PRODUCT_DESCRIPTION_TEXT]" as the visual focus. Blend realistically: correct placement, scale, fabric interaction, shadows, and body contact.
+* Add subtle, tasteful accessories as needed (watch, belt, socks, minimalist jewelry) that match the outfit and product.
+Creative styling cues (choose 1-2)
+* Folded-hands casual: user folds hands lightly at waist or chest, sleeves naturally creased, relaxed shoulders.
+* One-leg-forward weight shift: subtle hip shift for natural foreshortening.
+* Shoe-closeup option: crop slightly tighter left-right but keep 16:9; foreground shoe detail with shallow depth-of-field while keeping face readable in background.
+* Accessorize: add matching pants fabric texture and a watch on the wrist nearest camera; if product is eyewear, add realistic reflections and lens scale.
+* If product is small (shoe, watch, ring) place product in visual focal plane using shallow depth of field and realistic occlusion.
+Pose & framing
+* Full-body, straight-on, neutral stance with subtle weight shift; ensure limbs are fully in frame with natural foreshortening.
+* Frame and compose for landscape 16:9: leave generous headroom and space in front of body for product emphasis.
+* Camera: eye-level, slightly wide lens (natural perspective), avoid distortion.
+Lighting & background
+* Professional minimalist studio on seamless paper in light gray/beige/off-white; soft even flattering light, gentle fill, clean floor gradient; no harsh shadows or colored gels.
+* Ensure consistent lighting between face reference and body - match skin tone, grain, and shadow direction.
+Identity & face integration
+* Precisely align and blend the USER face onto a contextually appropriate body with consistent lighting and grain.
+* Match neck tone, jawline contour, hair edges; avoid haloing, blur, or mismatched color.
+* Keep expression neutral-pleasant; no over-smoothing or plastic skin.
+Wardrobe realism
+* Respect garment drape, folds, stretch; ensure realistic contact shadows at cuffs, collar, waistband, and accessory contact areas.
+* For eyewear, ensure temple angle fits over ears; for jewelry, render correct metal reflections and small catchlights.
+Output specs & controls
+* Output: single file, landscape 16:9 (1024x576), high detail, hyper-realistic, commercial fashion quality.
+* Guidance strength: medium-high for identity lock.
+* Face restoration/detailing: subtle.
+* Seed: locked for reproducibility, if supported.
+Negative prompt (avoid)
+* nsfw, explicit, nude, sexualized or suggestive content
+* low quality, blurry, watermark, signature, text
+* extra limbs, fused fingers, bad anatomy, deformed or distorted features
+* mismatched skin tones, lighting mismatch between face and body
+* over-smoothing or plastic skin
+* product detached or poorly integrated
+Optional creative variants (pick one to generate alongside main image)
+1. Folded hands full-body - slightly wider frame to show sleeve detail and watch.
+2. Shoe-forward closeup - foreground shoe detail with soft bokeh but landscape crop; face remains readable.
+3. Waist-up plus hands - crop tighter vertically but still landscape; emphasizes product at torso or hand.
+4. Accessory-focused - highlight watch/bracelet with wrist near camera, realistic reflections and shadowing.

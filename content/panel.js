@@ -1,5 +1,34 @@
 // content/panel.js
 (() => {
+  // Helper function to generate try button HTML with background image
+  const generateTryButtonHTML = (backgroundImageUrl = null) => {
+    return `
+      <div class="dy-image-placeholder">
+        ${backgroundImageUrl ? `
+          <div class="dy-background-image" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('${backgroundImageUrl}');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px);
+            opacity: 0.2;
+            z-index: 0;
+          "></div>
+        ` : ''}
+        <div class="dy-try-button-container" style="position: relative; z-index: 1;">
+          <button class="dy-btn dy-btn-primary dy-try-btn" data-action="try-this-out">
+            Try it on
+          </button>
+          <div class="dy-try-subtext">Generate personalized AI images from this outfit</div>
+        </div>
+      </div>
+    `;
+  };
+
   // Initialize the overlay
   const init = () => {
     console.log('Drip Float: Starting initialization...');
@@ -40,14 +69,7 @@
       </div>
       <div class="dy-body">
         <div class="dy-image-slot" aria-label="Image view">
-          <div class="dy-image-placeholder">
-            <div class="dy-try-button-container">
-              <button class="dy-btn dy-btn-primary dy-try-btn" data-action="try-this-out">
-                Try it on
-              </button>
-              <div class="dy-try-subtext">Generate personalized AI images from this page</div>
-            </div>
-          </div>
+          ${generateTryButtonHTML()}
         </div>
         <div class="dy-side-buttons">
           <button class="dy-btn" data-action="more" title="More Options"><img src="${chrome.runtime.getURL('icons/text-align-justify.svg')}" alt="More Options" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⋯</span></button>
@@ -345,16 +367,12 @@
   // Show try this out button
   const showTryThisOutButton = () => {
     const imageSlot = container.querySelector('.dy-image-slot');
-    imageSlot.innerHTML = `
-      <div class="dy-image-placeholder">
-        <div class="dy-try-button-container">
-          <button class="dy-btn dy-btn-primary dy-try-btn" data-action="try-this-out">
-            Try it on
-          </button>
-          <div class="dy-try-subtext">Generate personalized AI images from this outfit</div>
-        </div>
-      </div>
-    `;
+    
+    // Get og:image from the page for background
+    const ogImage = getOGImageFromPage();
+    const backgroundImageUrl = ogImage ? ogImage.url : null;
+    
+    imageSlot.innerHTML = generateTryButtonHTML(backgroundImageUrl);
 
     // Add event listener for the try button
     const tryBtn = imageSlot.querySelector('[data-action="try-this-out"]');
@@ -470,9 +488,10 @@
           );
 
           if (result.success && result.imageData) {
+            // Store the generated image data globally for download
+            window.currentGeneratedImageData = result.imageData;
             // Display the generated image
             displayGeneratedImage(result.imageData);
-            showImageSuccess('AI-generated image ready!');
           } else {
             showImageError(`Generation failed: ${result.error || 'Unknown error'}`);
           }
@@ -507,29 +526,24 @@
       imageSlot.innerHTML = `
         <div class="dy-image-container">
           <img src="${blobUrl}" alt="AI Generated Image" class="dy-extracted-image dy-generated-image" />
+          <div class="dy-image-actions">
+            <button class="dy-btn" data-action="back-to-original" title="Back to Original">
+              <img src="${chrome.runtime.getURL('icons/undo-2.svg')}" alt="Back to Original" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';">
+              <span style="display:none;">↶</span>
+            </button>
+          </div>
           <div class="dy-image-info">
             <div class="dy-image-label">AI Generated</div>
-          </div>
-          <div class="dy-image-actions">
-            <button class="dy-btn dy-btn-primary" data-action="download-generated">Download</button>
-            <button class="dy-btn" data-action="back-to-original">Back to Original</button>
           </div>
         </div>
       `;
 
       // Add event listeners for generated image actions
-      const downloadBtn = imageSlot.querySelector('[data-action="download-generated"]');
       const backBtn = imageSlot.querySelector('[data-action="back-to-original"]');
-      
-      if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => {
-          window.ImageGen.saveImageToFile(imageData.data, 'ai-generated-image.png', imageData.mimeType);
-        });
-      }
       
       if (backBtn) {
         backBtn.addEventListener('click', () => {
-          displayCurrentImage();
+          showTryThisOutButton();
         });
       }
     } else {
@@ -1027,6 +1041,17 @@
     } else if (action === 'generate') {
       // Generate AI image
       generatePersonalizedImage();
+    } else if (action === 'download-generated') {
+      // Download generated image
+      const imageSlot = container.querySelector('.dy-image-slot');
+      const generatedImage = imageSlot.querySelector('.dy-generated-image');
+      if (generatedImage && window.ImageGen) {
+        // Get the current image data from the generated image
+        const currentImageData = window.currentGeneratedImageData;
+        if (currentImageData) {
+          window.ImageGen.saveImageToFile(currentImageData.data, 'ai-generated-image.png', currentImageData.mimeType);
+        }
+      }
     }
   });
 

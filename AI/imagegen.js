@@ -4,9 +4,27 @@
  */
 
 // Configuration
-const GEMINI_API_KEY = 'AIzaSyAA7iZIIjBYfqlwDfQkjzw8laEAFNKuXXU'; // Replace with your actual API key
+const GEMINI_API_KEY = 'your key here'; // Replace with your actual API key
 const GEMINI_MODEL = 'gemini-2.5-flash-image-preview';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+// Optimized generation configuration for fast response and landscape images
+const GENERATION_CONFIG = {
+    temperature: 0.4,                    // Lower temperature for more consistent, faster generation
+    // topP: 0.8,                          // Nucleus sampling for focused generation
+    // topK: 40,                           // Top-k sampling for quality control
+    maxOutputTokens: 1024,               // Sufficient tokens for image generation
+    candidateCount: 1,                   // Single candidate for faster response
+    responseModalities: ["IMAGE"],       // Explicitly request image modality
+    seed: 42,                           // Fixed seed for consistent results
+    // responseSchema: {
+    //     type: "OBJECT",
+    //     properties: {
+    //       image: { type: "STRING", description: "Base64 encoded image" },
+    //       aspectRatio: { type: "STRING", description: "Aspect ratio, e.g., '16:9'" }
+    //     },
+    //   }
+};
 
 // Prompt template will be loaded from prompt.txt
 let PROMPT_TEMPLATE = '';
@@ -94,7 +112,7 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
 
         // Build the prompt with dynamic replacements
         const finalPrompt = PROMPT_TEMPLATE
-            .replace('[USER_IMAGE_REFERENCE]', 'the provided user photo')
+            .replace('[USER_IMAGE_REFERENCE]', 'the provided user photo image 1')
             .replace('[USER_PRODUCT_DESCRIPTION_TEXT]', productDescription);
 
         // Prepare the request payload
@@ -115,7 +133,8 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
                         }
                     }
                 ]
-            }]
+            }],
+            generationConfig: GENERATION_CONFIG
         };
         console.error('api request :', requestPayload);
 
@@ -137,6 +156,8 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
 
         const result = await response.json();
 
+        // let result = await fetch(chrome.runtime.getURL('AI/testData.json'));
+        // result = await result.json();
         console.error('api result :', result);
         
         // Extract the generated image from the response
@@ -281,7 +302,8 @@ if (typeof module !== 'undefined' && module.exports) {
         saveImageToFile,
         base64ToBlobUrl,
         GEMINI_API_KEY,
-        GEMINI_MODEL
+        GEMINI_MODEL,
+        GENERATION_CONFIG
     };
 } else {
     // Browser environment
@@ -292,7 +314,8 @@ if (typeof module !== 'undefined' && module.exports) {
         saveImageToFile,
         base64ToBlobUrl,
         GEMINI_API_KEY,
-        GEMINI_MODEL
+        GEMINI_MODEL,
+        GENERATION_CONFIG
     };
 }
 

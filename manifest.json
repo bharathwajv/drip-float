@@ -74,6 +74,7 @@
         "config/sites.json",
         "config/sites.js",
         "AI/prompt.txt",
+        "AI/testData.json",
         "AI/userImageBase64.txt",
         "AI/imagegen.js",
         "public/fav_icon_logo.png",
