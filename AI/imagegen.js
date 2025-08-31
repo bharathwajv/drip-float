@@ -2,7 +2,7 @@
  * Image Generation using Google Gemini API
  * Generates personalized product images by replacing models with user photos
  */
-
+const testMode = true;
 // Configuration
 const GEMINI_API_KEY = 'your key here'; // Replace with your actual API key
 const GEMINI_MODEL = 'gemini-2.5-flash-image-preview';
@@ -75,6 +75,29 @@ async function loadUserImageBase64() {
 }
 
 /**
+ * Update user image base64 for daisy chaining
+ * @param {string} newUserImageBase64 - New base64 encoded user image
+ */
+function updateUserImageBase64(newUserImageBase64) {
+    if (newUserImageBase64) {
+        USER_IMAGE_BASE64 = newUserImageBase64;
+        console.log('User image base64 updated for daisy chaining');
+    }
+}
+
+/**
+ * Reset user image base64 to default (from file)
+ */
+async function resetToDefaultUserImage() {
+    try {
+        await loadUserImageBase64();
+        console.log('User image base64 reset to default');
+    } catch (error) {
+        console.error('Error resetting user image to default:', error);
+    }
+}
+
+/**
  * Initialize the image generation module
  */
 async function initializeImageGen() {
@@ -89,9 +112,10 @@ async function initializeImageGen() {
  * Generate personalized product image using Gemini API
  * @param {string} ogImageUrl - URL of the og:image from the page
  * @param {string} productDescription - Description of the product to integrate
+ * @param {string} daisyChainUserImage - Optional base64 user image for daisy chaining
  * @returns {Promise<Object>} - Response with generated image data
  */
-async function generatePersonalizedImage(ogImageUrl, productDescription) {
+async function generatePersonalizedImage(ogImageUrl, productDescription, daisyChainUserImage = null) {
     try {
         // Ensure initialization is complete
         if (!PROMPT_TEMPLATE || !USER_IMAGE_BASE64) {
@@ -110,6 +134,9 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
         // Fetch the og:image and convert to base64
         const ogImageBase64 = await fetchImageAsBase64(ogImageUrl);
 
+        // Use daisy chain user image if provided, otherwise use default user image
+        const userImageToUse = daisyChainUserImage || USER_IMAGE_BASE64;
+        
         // Build the prompt with dynamic replacements
         const finalPrompt = PROMPT_TEMPLATE
             .replace('[USER_IMAGE_REFERENCE]', 'the provided user photo image 1')
@@ -123,7 +150,7 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
                     {
                         inlineData: {
                             mimeType: "image/png",
-                            data: USER_IMAGE_BASE64
+                            data: userImageToUse
                         }
                     },
                     {
@@ -137,32 +164,35 @@ async function generatePersonalizedImage(ogImageUrl, productDescription) {
             generationConfig: GENERATION_CONFIG
         };
         console.error('api request :', requestPayload);
+        let result;
+        if (!testMode) {
+            // Make API call to Gemini
+            const response = await fetch(`${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestPayload)
+            });
 
-        // Make API call to Gemini
-        const response = await fetch(`${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestPayload)
-        });
+            console.error('api response :', response);
 
-        console.error('api response :', response);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            }
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            result = await response.json();
+        } else {
+
+            result = await fetch(chrome.runtime.getURL('AI/testData.json'));
         }
-
-        const result = await response.json();
-
-        // let result = await fetch(chrome.runtime.getURL('AI/testData.json'));
-        // result = await result.json();
+        result = await result.json();
         console.error('api result :', result);
-        
+
         // Extract the generated image from the response
         const generatedImage = extractGeneratedImage(result);
-        
+
         return {
             success: true,
             imageData: generatedImage,
@@ -190,7 +220,7 @@ async function fetchImageAsBase64(imageUrl) {
         if (!response.ok) {
             throw new Error(`Failed to fetch image: ${response.status}`);
         }
-        
+
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -277,14 +307,14 @@ function base64ToBlobUrl(base64Data, mimeType = 'image/png') {
     try {
         const byteCharacters = atob(base64Data);
         const byteNumbers = new Array(byteCharacters.length);
-        
+
         for (let i = 0; i < byteCharacters.length; i++) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
-        
+
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: mimeType });
-        
+
         return URL.createObjectURL(blob);
     } catch (error) {
         console.error('Error converting base64 to blob URL:', error);
@@ -301,6 +331,8 @@ if (typeof module !== 'undefined' && module.exports) {
         extractGeneratedImage,
         saveImageToFile,
         base64ToBlobUrl,
+        updateUserImageBase64,
+        resetToDefaultUserImage,
         GEMINI_API_KEY,
         GEMINI_MODEL,
         GENERATION_CONFIG
@@ -313,6 +345,8 @@ if (typeof module !== 'undefined' && module.exports) {
         extractGeneratedImage,
         saveImageToFile,
         base64ToBlobUrl,
+        updateUserImageBase64,
+        resetToDefaultUserImage,
         GEMINI_API_KEY,
         GEMINI_MODEL,
         GENERATION_CONFIG

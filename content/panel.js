@@ -73,6 +73,11 @@
         </div>
         <div class="dy-side-buttons">
           <button class="dy-btn" data-action="more" title="More Options"><img src="${chrome.runtime.getURL('icons/text-align-justify.svg')}" alt="More Options" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">⋯</span></button>
+          <button class="dy-btn dy-daisy-chain-btn" data-action="daisy-chain" title="Daisy Chain Mode (Use generated image as new user image)">
+            <img src="${chrome.runtime.getURL('icons/unlink.svg')}" alt="Daisy Chain Off" class="dy-daisy-chain-icon dy-unlink-icon" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';">
+            <img src="${chrome.runtime.getURL('icons/link.svg')}" alt="Daisy Chain On" class="dy-daisy-chain-icon dy-link-icon" width="16" height="16" style="display: none;" onerror="this.style.display='none'; this.nextSibling.style.display='inline';">
+            <span style="display:none;">🔗</span>
+          </button>
           <button class="dy-btn" data-action="extract" title="Open Full Screen"><img src="${chrome.runtime.getURL('icons/square-arrow-out-up-right.svg')}" alt="Open Full Screen" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">↗</span></button>
           <button class="dy-btn" data-action="download-generated" title="Download Image"><img src="${chrome.runtime.getURL('icons/download.svg')}" alt="Download Image" width="16" height="16" onerror="this.style.display='none'; this.nextSibling.style.display='inline';"><span style="display:none;">🎨</span></button>
         </div>
@@ -102,7 +107,7 @@
       <button class="dy-dropdown-item" data-menu="open-settings">Open Settings</button>
     `;
     
-    // Add CSS styling for the dropdown menu
+    // Add CSS styling for the dropdown menu and daisy chain button
     const dropdownStyle = document.createElement('style');
     dropdownStyle.textContent = `
       .dy-dropdown-menu {
@@ -147,6 +152,76 @@
       .dy-dropdown-item:active {
         background-color: #e9ecef;
       }
+      
+      /* Daisy Chain Button Styles */
+      .dy-daisy-chain-btn {
+        position: relative;
+        transition: all 0.3s ease;
+      }
+      
+      .dy-daisy-chain-btn.dy-active {
+        background-color: #007bff;
+        color: white;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
+      }
+      
+      .dy-daisy-chain-btn.dy-active:hover {
+        background-color:rgb(0, 104, 216);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+      }
+      
+      .dy-daisy-chain-icon {
+        transition: all 0.3s ease;
+        transform-origin: center;
+      }
+      
+      .dy-daisy-chain-btn.dy-active .dy-unlink-icon {
+        display: none !important;
+      }
+      
+      .dy-daisy-chain-btn.dy-active .dy-link-icon {
+        display: inline-block !important;
+        animation: linkPulse 0.6s ease-in-out;
+        filter: brightness(0) invert(1);
+      }
+      
+      .dy-daisy-chain-btn:not(.dy-active) .dy-unlink-icon {
+        display: inline-block !important;
+      }
+      
+      .dy-daisy-chain-btn:not(.dy-active) .dy-link-icon {
+        display: none !important;
+      }
+      
+      @keyframes linkPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+      
+      .dy-daisy-chain-btn:hover .dy-daisy-chain-icon {
+        transform: scale(1.1);
+      }
+      
+      /* Daisy chain indicator */
+      .dy-daisy-chain-btn.dy-active::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 8px;
+        height: 8px;
+        background-color: #28a745;
+        border-radius: 50%;
+        border: 2px solid white;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+      }
     `;
     
     shadow.appendChild(dropdownStyle);
@@ -172,6 +247,10 @@
     let expandedHeight = 0;
     let dragEndTime = 0;
     const CLICK_DELAY = 150; // 150ms delay to prevent accidental clicks after drag
+    
+    // Daisy chain state management
+    let isDaisyChainEnabled = false;
+    let daisyChainUserImage = null; // Store the generated image as new user image
 
   // Fallback function to get og:image from the page
   const getOGImageFromPage = () => {
@@ -481,15 +560,27 @@
 
         // Check if ImageGen is now available
         if (window.ImageGen) {
-          // Call the image generation function
+          // Call the image generation function with daisy chain support
           const result = await window.ImageGen.generatePersonalizedImage(
             currentImage.url,
-            productDescription
+            productDescription,
+            isDaisyChainEnabled ? daisyChainUserImage : null
           );
 
           if (result.success && result.imageData) {
             // Store the generated image data globally for download
             window.currentGeneratedImageData = result.imageData;
+            
+            // If daisy chain is enabled, store the generated image as new user image
+            if (isDaisyChainEnabled) {
+              daisyChainUserImage = result.imageData.data;
+              // Update the global user image base64 for future generations
+              if (window.ImageGen && window.ImageGen.updateUserImageBase64) {
+                window.ImageGen.updateUserImageBase64(result.imageData.data);
+              }
+              console.log('Daisy chain: Stored generated image as new user image');
+            }
+            
             // Display the generated image
             displayGeneratedImage(result.imageData);
           } else {
@@ -691,6 +782,45 @@
     if (currentImages.length > 1) {
       updateNavigationState();
     }
+  };
+
+  // Daisy chain functionality
+  const toggleDaisyChain = () => {
+    isDaisyChainEnabled = !isDaisyChainEnabled;
+    const daisyChainBtn = container.querySelector('.dy-daisy-chain-btn');
+    
+    if (isDaisyChainEnabled) {
+      daisyChainBtn.classList.add('dy-active');
+      daisyChainBtn.title = 'Daisy Chain Mode: ON (Generated image will be used as new user image)';
+      console.log('Daisy chain mode enabled');
+    } else {
+      daisyChainBtn.classList.remove('dy-active');
+      daisyChainBtn.title = 'Daisy Chain Mode: OFF (Default user image will be used)';
+      // Reset daisy chain user image when disabled
+      daisyChainUserImage = null;
+      // Reset to default user image
+      if (window.ImageGen && window.ImageGen.resetToDefaultUserImage) {
+        window.ImageGen.resetToDefaultUserImage();
+      }
+      console.log('Daisy chain mode disabled');
+    }
+    
+    // Save state to storage
+    chrome.storage.local.set({ daisyChainEnabled: isDaisyChainEnabled });
+  };
+
+  // Load daisy chain state from storage
+  const loadDaisyChainState = () => {
+    chrome.storage.local.get(['daisyChainEnabled'], (result) => {
+      if (result.daisyChainEnabled) {
+        isDaisyChainEnabled = true;
+        const daisyChainBtn = container.querySelector('.dy-daisy-chain-btn');
+        if (daisyChainBtn) {
+          daisyChainBtn.classList.add('dy-active');
+          daisyChainBtn.title = 'Daisy Chain Mode: ON (Generated image will be used as new user image)';
+        }
+      }
+    });
   };
 
   // Dropdown menu functionality
@@ -1048,6 +1178,9 @@
     if (action === 'more') {
       // Toggle dropdown menu
       toggleDropdownMenu();
+    } else if (action === 'daisy-chain') {
+      // Toggle daisy chain mode
+      toggleDaisyChain();
     } else if (action === 'extract') {
       // Open current image in new tab for full screen viewing
       openImageInNewTab();
@@ -1188,6 +1321,7 @@
     loadSavedDimensions();
     loadSavedState();
     loadBubblePosition();
+    loadDaisyChainState();
     
     console.log('document.readyState:', document.readyState);
     // Initialize original dimensions

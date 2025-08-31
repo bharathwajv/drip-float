@@ -16,8 +16,8 @@ class ImageExtractor {
       // Extract product images
       this.productImages = this.extractProductImages();
       
-      // Extract general page images
-      this.currentPageImages = this.extractGeneralImages();
+      // Extract general page images (now async)
+      this.currentPageImages = await this.extractGeneralImages();
       
       // Extract page metadata
       this.pageMetadata = this.extractPageMetadata();
@@ -120,27 +120,90 @@ class ImageExtractor {
   }
 
   // Extract general page images
-  extractGeneralImages() {
+  async extractGeneralImages() {
     const images = [];
     const imgElements = document.querySelectorAll('img');
     
-    imgElements.forEach((img, index) => {
+    for (let i = 0; i < imgElements.length; i++) {
+      const img = imgElements[i];
+      
       if (img.src && 
           img.src !== 'data:image/svg+xml;base64,' &&
           img.naturalWidth > 100 && 
           img.naturalHeight > 100) {
+        
+        // Check if image is portrait and convert to landscape with white space
+        let processedUrl = img.src;
+        let processedWidth = img.naturalWidth;
+        let processedHeight = img.naturalHeight;
+        
+        if (img.naturalHeight > img.naturalWidth) {
+          // Portrait image - convert to landscape
+          try {
+            processedUrl = await this.convertPortraitToLandscape(img.src, img.naturalWidth, img.naturalHeight);
+            processedWidth = img.naturalHeight; // Swap dimensions
+            processedHeight = img.naturalHeight; // Keep height, width becomes height
+          } catch (error) {
+            console.warn('Failed to convert portrait image to landscape:', error);
+            // Keep original URL if conversion fails
+          }
+        }
+        
         images.push({
-          url: img.src,
+          url: processedUrl,
           type: 'page',
           priority: 3,
-          alt: img.alt || `Page Image ${index + 1}`,
-          width: img.naturalWidth,
-          height: img.naturalHeight
+          alt: img.alt || `Page Image ${i + 1}`,
+          width: processedWidth,
+          height: processedHeight,
+          originalWidth: img.naturalWidth,
+          originalHeight: img.naturalHeight
         });
       }
-    });
+    }
 
     return images;
+  }
+
+  // Convert portrait image to landscape by adding white space
+  convertPortraitToLandscape(imageUrl, originalWidth, originalHeight) {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        // Create landscape canvas (height becomes width)
+        const landscapeWidth = originalHeight;
+        const landscapeHeight = originalHeight;
+        
+        canvas.width = landscapeWidth;
+        canvas.height = landscapeHeight;
+        
+        // Fill with white background
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, landscapeWidth, landscapeHeight);
+        
+        // Calculate centering position
+        const x = (landscapeWidth - originalWidth) / 2;
+        const y = 0;
+        
+        // Draw original image centered
+        ctx.drawImage(img, x, y, originalWidth, originalHeight);
+        
+        // Convert to data URL
+        const landscapeUrl = canvas.toDataURL('image/jpeg', 0.9);
+        resolve(landscapeUrl);
+      };
+      
+      img.onerror = () => {
+        // If processing fails, return original URL
+        resolve(imageUrl);
+      };
+      
+      img.src = imageUrl;
+    });
   }
 
   // Combine and prioritize images
@@ -301,8 +364,8 @@ class ImageExtractor {
   }
 
   // Create a summary of extracted data
-  createExtractionSummary() {
-    const images = this.extractPageImages();
+  async createExtractionSummary() {
+    const images = await this.extractPageImages();
     const metadata = this.extractPageMetadata();
     
     return {
