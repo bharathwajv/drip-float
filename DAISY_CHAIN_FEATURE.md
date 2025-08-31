@@ -37,25 +37,42 @@ The Daisy Chain feature allows users to use generated AI images as the new user 
 ### State Management
 - `isDaisyChainEnabled`: Boolean flag for current mode
 - `daisyChainUserImage`: Stores the generated image base64 data
-- Persisted in Chrome storage for session continuity
+- Persisted in Chrome storage for session continuity and cross-site functionality
 
 ### Functions Added
 - `toggleDaisyChain()`: Toggle between modes
-- `loadDaisyChainState()`: Load saved state on initialization
+- `loadDaisyChainState()`: Load saved state and stored image on initialization
 - `updateUserImageBase64()`: Update AI module with new user image
 - `resetToDefaultUserImage()`: Reset to original user image
+- Cross-site persistence: Daisy chain images stored in Chrome local storage
 
 ### Integration Points
 - Modified `generatePersonalizedImage()` to accept optional daisy chain image
 - Updated button click handler to handle daisy chain action
 - Enhanced CSS for visual feedback and animations
+- Added local storage integration for cross-site persistence
 
 ## Usage Flow
 
 1. **Enable Daisy Chain**: Click the daisy chain button (unlink icon)
 2. **Generate Image**: Use "Try it on" or generate AI image
 3. **Chain Continues**: Next generation uses the generated image as user image
-4. **Disable**: Click button again to return to default mode
+4. **Cross-Site Persistence**: Generated images are automatically loaded on different websites
+5. **Disable**: Click button again to return to default mode
+
+## Cross-Site Functionality
+
+### How It Works
+- When daisy chain is enabled and an image is generated, it's stored in Chrome local storage
+- The stored image is automatically loaded when visiting different websites
+- The ImageGen module is updated with the stored image during initialization
+- Users can continue their daisy chain across multiple shopping sites
+
+### Storage Management
+- Images are stored as base64 data in `chrome.storage.local`
+- Storage is cleared when daisy chain is disabled
+- Automatic cleanup prevents storage bloat
+- Compatible with Chrome's storage limits
 
 ## Benefits
 
@@ -63,11 +80,13 @@ The Daisy Chain feature allows users to use generated AI images as the new user 
 - **Creative Exploration**: Users can explore different style variations
 - **Consistent Identity**: Maintains user identity while evolving style
 - **Flexible Workflow**: Easy to switch between modes as needed
+- **Cross-Site Continuity**: Daisy chain images persist across different websites
 
 ## Technical Notes
 
 - Daisy chain state persists across browser sessions
-- Generated images are stored as base64 data for immediate use
+- Generated images are stored as base64 data in Chrome local storage for cross-site persistence
 - Fallback to default user image when daisy chain is disabled
 - Memory efficient with single image storage
 - Compatible with existing image generation pipeline
+- Automatic loading of stored daisy chain images when ImageGen module initializes

@@ -186,8 +186,8 @@ async function generatePersonalizedImage(ogImageUrl, productDescription, daisyCh
         } else {
 
             result = await fetch(chrome.runtime.getURL('AI/testData.json'));
+            result = await result.json();
         }
-        result = await result.json();
         console.error('api result :', result);
 
         // Extract the generated image from the response

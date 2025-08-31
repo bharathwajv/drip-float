@@ -1,0 +1,70 @@
+Use the uploaded user photo [USER_IMAGE_REFERENCE] as the identity reference. Produce a single photorealistic landscape image (16:9 aspect ratio, optimized for 1024x576) with the USER as the model. Preserve unique facial features, skin tone, hairline, eye shape, and proportions; no beautification unless requested.
+
+### Primary subject
+
+* Full-body photorealistic portrait of the USER in a professional studio, but with casual, candid energy.
+* Confident yet relaxed body language: natural weight shift, hands visible, no mannequin stiffness.
+* Expression neutral-pleasant, but open to subtle candid variations (soft smile, mid-motion gesture, natural glance).
+
+### Clothing & product integration
+
+* Base outfit: stylish contemporary shirt and complementary pants (well fitted).
+* Integrate the featured product described as "[USER_PRODUCT_DESCRIPTION_TEXT]" as the visual focus. Blend realistically with correct placement, scale, fabric interaction, shadows, and body contact.
+* Add tasteful accessories (watch, belt, minimal jewelry, socks, shoes) that harmonize with the product.
+
+### Creative styling cues (casual studio candids)
+
+* Folded-hands casual: hands loosely folded at waist or chest, natural sleeve folds.
+* Hands in pockets: one or both hands casually in pockets, relaxed shoulders.
+* Jacket adjustment: mid-action adjusting cuff, sleeve, or collar.
+* Shoe-forward stance: one leg subtly forward, shoe slightly emphasized, candid mid-shift.
+* Looking away candid: user glances slightly off-camera, natural posture.
+* Accessory interaction: checking a watch, adjusting eyewear, or resting hand on wrist.
+
+### Pose & framing
+
+* Full-body, straight-on but allow slight angle or subtle mid-motion stance for candid realism.
+* Frame and compose for 16:9 landscape, leaving headroom and balanced spacing.
+* Camera: eye-level, slightly wide lens for natural perspective, no distortion.
+
+### Lighting & background
+
+* Professional minimalist studio: seamless backdrop in light gray/beige/off-white.
+* Soft, flattering light with gentle shadows and floor gradient.
+* Keep consistent tone between reference face and generated body.
+
+### Identity & face integration
+
+* Precisely align and blend USER face with natural skin tone, hair edges, and jawline contour.
+* Avoid halo, blur, or mismatched light.
+* Keep expression candid but natural (slight smile, soft gaze, neutral-pleasant).
+
+### Wardrobe realism
+
+* Maintain authentic drape, folds, and stretch in clothing.
+* Respect contact shadows at cuffs, waistband, accessories, and shoes.
+* For eyewear: natural lens reflections and correct ear/temple alignment.
+* For jewelry: realistic reflections, metal shine.
+
+### Output specs & controls
+
+* Output: single file, landscape 16:9 (1024x576), high detail, hyper-realistic, fashion-commercial quality.
+* Guidance strength: medium-high identity lock.
+* Face restoration/detailing: subtle.
+* Seed: locked if supported.
+
+### Negative prompt (avoid)
+
+* nsfw, explicit, nude, sexualized content
+* low quality, blurry, watermark, text, signature
+* anatomical errors, extra limbs, fused fingers
+* mismatched lighting or skin tone
+* over-smoothing, plastic skin
+* product poorly integrated or detached
+
+### optional candid variants
+
+1. Hands-in-pockets full-body with slight lean, casual stance.
+2. Jacket adjustment mid-action, candid natural gesture.
+3. Shoe-forward stance, subtle step, face relaxed.
+4. Checking watch or adjusting accessory, candid and casual.

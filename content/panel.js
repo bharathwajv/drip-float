@@ -103,7 +103,7 @@
     dropdownMenu.className = 'dy-dropdown-menu dy-hidden';
     dropdownMenu.innerHTML = `
       <button class="dy-dropdown-item" data-menu="history">History</button>
-      <button class="dy-dropdown-item" data-menu="open-full">Open Full Page</button>
+      <button class="dy-dropdown-item" data-menu="open-full">View Usage</button>
       <button class="dy-dropdown-item" data-menu="open-settings">Open Settings</button>
     `;
     
@@ -560,6 +560,11 @@
 
         // Check if ImageGen is now available
         if (window.ImageGen) {
+          // If daisy chain is enabled and we have a stored image, update the ImageGen module
+          if (isDaisyChainEnabled && daisyChainUserImage && window.ImageGen.updateUserImageBase64) {
+            window.ImageGen.updateUserImageBase64(daisyChainUserImage);
+            console.log('Daisy chain: Updated ImageGen module with stored user image');
+          }
           // Call the image generation function with daisy chain support
           const result = await window.ImageGen.generatePersonalizedImage(
             currentImage.url,
@@ -574,11 +579,13 @@
             // If daisy chain is enabled, store the generated image as new user image
             if (isDaisyChainEnabled) {
               daisyChainUserImage = result.imageData.data;
+              // Store the daisy chain image in local storage for persistence across sites
+              chrome.storage.local.set({ daisyChainUserImage: result.imageData.data });
               // Update the global user image base64 for future generations
               if (window.ImageGen && window.ImageGen.updateUserImageBase64) {
                 window.ImageGen.updateUserImageBase64(result.imageData.data);
               }
-              console.log('Daisy chain: Stored generated image as new user image');
+              console.log('Daisy chain: Stored generated image as new user image in memory and storage');
             }
             
             // Display the generated image
@@ -624,7 +631,7 @@
             </button>
           </div>
           <div class="dy-image-info">
-            <div class="dy-image-label">AI Generated</div>
+            <div class="dy-image-label">Drip Generated</div>
           </div>
         </div>
       `;
@@ -647,7 +654,13 @@
     const imageSlot = container.querySelector('.dy-image-slot');
     imageSlot.innerHTML = `
       <div class="dy-image-placeholder">
-        <div class="dy-loading dy-generating">🎨</div>
+        <div class="dy-loading dy-generating">
+          <div class="dy-shader-container">
+            <div class="dy-shader-gradient"></div>
+            <div class="dy-shader-flow"></div>
+            <div class="dy-shader-particles"></div>
+          </div>
+        </div>
         <div class="dy-loading-text">Generating AI image...</div>
         <div class="dy-loading-subtext">This may take a few moments</div>
       </div>
@@ -798,6 +811,8 @@
       daisyChainBtn.title = 'Daisy Chain Mode: OFF (Default user image will be used)';
       // Reset daisy chain user image when disabled
       daisyChainUserImage = null;
+      // Clear stored daisy chain image from storage
+      chrome.storage.local.remove(['daisyChainUserImage']);
       // Reset to default user image
       if (window.ImageGen && window.ImageGen.resetToDefaultUserImage) {
         window.ImageGen.resetToDefaultUserImage();
@@ -811,7 +826,7 @@
 
   // Load daisy chain state from storage
   const loadDaisyChainState = () => {
-    chrome.storage.local.get(['daisyChainEnabled'], (result) => {
+    chrome.storage.local.get(['daisyChainEnabled', 'daisyChainUserImage'], (result) => {
       if (result.daisyChainEnabled) {
         isDaisyChainEnabled = true;
         const daisyChainBtn = container.querySelector('.dy-daisy-chain-btn');
@@ -819,6 +834,12 @@
           daisyChainBtn.classList.add('dy-active');
           daisyChainBtn.title = 'Daisy Chain Mode: ON (Generated image will be used as new user image)';
         }
+      }
+      
+      // Load stored daisy chain user image if available
+      if (result.daisyChainUserImage) {
+        daisyChainUserImage = result.daisyChainUserImage;
+        console.log('Daisy chain user image loaded from storage');
       }
     });
   };
